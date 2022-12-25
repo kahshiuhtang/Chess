@@ -43,10 +43,10 @@ public class King implements Piece<King>{
 
     public void loadImages() {
         try {
-            Image image = ImageIO.read(new File("Pieces/images/whiteking.png"));
+            Image image = ImageIO.read(new File("images/whiteking.png"));
             Image image1 = image.getScaledInstance(100, 100, java.awt.Image.SCALE_SMOOTH);
             whiteV = new ImageIcon(image1);
-            image = ImageIO.read(new File("Pieces/images/blackking.png"));
+            image = ImageIO.read(new File("images/blackking.png"));
             image1 = image.getScaledInstance(100, 100, java.awt.Image.SCALE_SMOOTH);
             blackV = new ImageIcon(image1);
         } catch (IOException io) {
@@ -70,5 +70,9 @@ public class King implements Piece<King>{
             return c.getPiece(x1,y1) == null || c.getPiece(x1, y1).getIsWhite() != temp.getIsWhite();
         }
         return false;
+    }
+    @Override
+    public String toString(){
+        return "King";
     }
 }

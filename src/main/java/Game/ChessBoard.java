@@ -92,95 +92,36 @@ public class ChessBoard {
         if(x == 10 || y == 10 || x1 == 10 || y1 == 10){
             return true;
         }
-        if (c.getPiece(x1, y1).getIsWhite()) {
-            for (int i = 0; i < 8; i++) {
-                for (int j = 0; j < 8; j++) {
-                    if (c.getPiece(i, j) != null && c.getPiece(i, j).getIsWhite() && c.getPiece(i, j).toString().equals("King")) {
-                        kX = i;
-                        kY = j;
-                    }
+        boolean white = c.getPiece(x1, y1).getIsWhite();
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                if (c.getPiece(i, j) != null && c.getPiece(i, j).getIsWhite() == white && c.getPiece(i, j).toString().equals("King")) {
+                    kX = i;
+                    kY = j;
                 }
-            }
-        } else {
-            for (int i = 0; i < 8; i++) {
-                for (int j = 0; j < 8; j++) {
-                    if (c.getPiece(i, j) != null && !c.getPiece(i, j).getIsWhite() && c.getPiece(i, j).toString().equals("King")) {
-                        kX = i;
-                        kY = j;
-                    }
-                }
-            }
-        }
-        System.out.println(kX + "   " + kY);
-        for (int i = 1; i < 8; i++) {
-            if (kX + i < 8 && c.getPiece(kX + i, kY) != null && c.getPiece(kX + i, kY).getIsWhite() != c.getPiece(kX, kY).getIsWhite()) {
-                break;
-            }
-            if(kX + i < 8 && c.getPiece(kX + i, kY) != null && c.getPiece(kX + i, kY).getIsWhite() != c.getPiece(kX, kY).getIsWhite() && !(c.getPiece(kX + i, kY).toString().equals("Rook") || c.getPiece(kX + i, kY).toString().equals("Queen"))){
-                break;
-            }
-            if (kX + i < 8 && c.getPiece(kX + i, kY) != null && c.getPiece(kX + i, kY).getIsWhite() != c.getPiece(kX, kY).getIsWhite() && (c.getPiece(kX + i, kY).toString().equals("Rook") || c.getPiece(kX + i, kY).toString().equals("Queen"))) {
-                return true;
-            }
-        }
-        for (int i = 1; i < 8; i++) {
-
-            if (kX - i >= 0 && c.getPiece(kX - i, kY) != null && c.getPiece(kX - i, kY).getIsWhite() != c.getPiece(kX, kY).getIsWhite()) {
-                break;
-            }
-            if(kX -i >= 0  && c.getPiece(kX - i, kY) != null && c.getPiece(kX - i, kY).getIsWhite() != c.getPiece(kX, kY).getIsWhite() && !(c.getPiece(kX - i, kY).toString().equals("Rook") || c.getPiece(kX - i, kY).toString().equals("Queen"))){
-                break;
-            }
-            if (kX - i >= 0 && c.getPiece(kX - i, kY) != null && c.getPiece(kX - i, kY).getIsWhite() != c.getPiece(kX, kY).getIsWhite() && (c.getPiece(kX - i, kY).toString().equals("Rook") || c.getPiece(kX - i, kY).toString().equals("Queen"))) {
-                System.out.println("????");
-                return true;
-            }
-        }
-        for (int i = 1; i < 8; i++) {
-            if (kY + i < 8 && c.getPiece(kX, kY + i) != null && c.getPiece(kX , kY+i).getIsWhite() != c.getPiece(kX, kY).getIsWhite()) {
-                break;
-            }
-            if(kY + i < 8 && c.getPiece(kX, kY+i) != null && c.getPiece(kX , kY+i).getIsWhite() != c.getPiece(kX, kY).getIsWhite() && !(c.getPiece(kX, kY+i).toString().equals("Rook") || c.getPiece(kX, kY+i).toString().equals("Queen"))){
-                break;
-            }
-            if (kY + i < 8 && c.getPiece(kX, kY + i) != null && c.getPiece(kX , kY+i).getIsWhite() != c.getPiece(kX, kY).getIsWhite() && (c.getPiece(kX, kY + i).toString().equals("Rook") || c.getPiece(kX, kY + i).toString().equals("Queen"))) {
-                return true;
-            }
-        }
-        for (int i = 1; i < 8; i++) {
-            if (kY - i >= 0 && c.getPiece(kX, kY - i) != null && c.getPiece(kX , kY-i).getIsWhite() != c.getPiece(kX, kY).getIsWhite()) {
-                break;
-            }
-            if(kY - i >= 0 && c.getPiece(kX, kY-i) != null && c.getPiece(kX , kY-i).getIsWhite() != c.getPiece(kX, kY).getIsWhite() && !(c.getPiece(kX, kY-i).toString().equals("Rook") || c.getPiece(kX, kY-i).toString().equals("Queen"))){
-                break;
-            }
-            if (kY - i >= 0 && c.getPiece(kX, kY - i) != null && c.getPiece(kX , kY-i).getIsWhite() != c.getPiece(kX, kY).getIsWhite() && (c.getPiece(kX, kY - i).toString().equals("Rook") || c.getPiece(kX, kY - i).toString().equals("Queen"))) {
-                return true;
-            }
-        }
-        for (int i = 1; i < 8; i++) {
-            if (kY + i < 8 && kX + i < 8 && c.getPiece(kX + i, kY + i) != null && c.getPiece(kX+i , kY+i).getIsWhite() != c.getPiece(kX, kY).getIsWhite()) {
-                break;
-            }
-            if (kY + i < 8 && kX + i < 8 && c.getPiece(kX + i, kY + i) != null && c.getPiece(kX+i , kY+i).getIsWhite() != c.getPiece(kX, kY).getIsWhite() && (c.getPiece(kX + i, kY + i).toString().equals("Bishop") || c.getPiece(kX + i, kY + i).toString().equals("Queen"))) {
-                return true;
-            }
-        }
-        for (int i = 1; i < 8; i++) {
-            if (kY - i >= 0 && kX - i >= 0 && c.getPiece(kX - i, kY - i) != null && c.getPiece(kX-i , kY-i).getIsWhite() != c.getPiece(kX, kY).getIsWhite()) {
-                break;
-            }
-            if (kY - i >= 0 && kX - i >= 0 && c.getPiece(kX - i, kY - i) != null && c.getPiece(kX-i , kY-i).getIsWhite() != c.getPiece(kX, kY).getIsWhite() && (c.getPiece(kX - i, kY - i).toString().equals("Rook") || c.getPiece(kX - i, kY - i).toString().equals("Queen"))) {
-                return true;
             }
         }
         int xInc = c.getPiece(kX, kY).getIsWhite() ? -1 : 1;
         if (checkOnBoard(kX + xInc, kY + 1) && c.getPiece(kX + xInc, kY + 1) != null && c.getPiece(kX + xInc, kY + 1).toString().equals("Pawn") && c.getPiece(kX + xInc, kY + 1).getIsWhite() != c.getPiece(kX, kY).getIsWhite()) {
             return true;
-        } else if (checkOnBoard(kX + xInc, kY - 1) && c.getPiece(kX + xInc, kY - 1) != null && c.getPiece(kX + xInc, kY - 1).toString().equals("Pawn") && c.getPiece(kX + 1, kY - 1).getIsWhite()!= c.getPiece(kX, kY).getIsWhite()) {
+        } else if (checkOnBoard(kX + xInc, kY - 1) && c.getPiece(kX + xInc, kY - 1) != null && c.getPiece(kX + xInc, kY - 1).toString().equals("Pawn") && c.getPiece(kX + xInc, kY - 1).getIsWhite()!= c.getPiece(kX, kY).getIsWhite()) {
             return true;
         }
-        return checkKnights(kX, kY, c) || diagonalCheck(kX, kY, c) || kingCheck(kX, kY, c);
+        return rowColumnCheck(kX,kY,c) || checkKnights(kX, kY, c) || diagonalCheck(kX, kY, c) || kingCheck(kX, kY, c);
+    }
+    public boolean rowColumnCheck(int kX,int kY, ChessBoard c){
+        return rowColumnHelper(kX,kY,1,0,c) || rowColumnHelper(kX,kY,0,1,c) || rowColumnHelper(kX,kY,-1,0,c) || rowColumnHelper(kX,kY,0,-1,c);
+    }
+    public boolean rowColumnHelper(int kX,int kY, int xInc, int yInc, ChessBoard c){
+        for (int i = 1; i < 8; i++) {
+            if (checkOnBoard(kX+xInc*i, kY+yInc*i) && c.getPiece(kX+xInc*i, kY+yInc*i) != null && c.getPiece(kX+xInc*i, kY+yInc*i).getIsWhite() == c.getPiece(kX, kY).getIsWhite()) {
+                break;
+            }
+            if(checkOnBoard(kX+xInc*i, kY+yInc*i)&& c.getPiece(kX+xInc*i, kY+yInc*i) != null && c.getPiece(kX+xInc*i, kY+yInc*i).getIsWhite() != c.getPiece(kX, kY).getIsWhite()){
+                return c.getPiece(kX+xInc*i, kY+yInc*i).toString().equals("Rook") || c.getPiece(kX+xInc*i, kY+yInc*i).toString().equals("Queen");
+            }
+        }
+        return false;
     }
     public boolean diagonalCheck(int kX,int kY, ChessBoard c){
         return diagonalHelp(kX, kY,1,1,c) || diagonalHelp(kX, kY,-1,1,c) ||diagonalHelp(kX, kY,-1,-1,c) ||diagonalHelp(kX, kY,1,-1,c) ;

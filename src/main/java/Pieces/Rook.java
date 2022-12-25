@@ -42,10 +42,10 @@ public class Rook implements Piece<Rook>{
 
     public void loadImages() {
         try {
-            Image image = ImageIO.read(new File("Pieces/images/whiterook.png"));
+            Image image = ImageIO.read(new File("images/whiterook.png"));
             Image image1 = image.getScaledInstance(100, 100, java.awt.Image.SCALE_SMOOTH);
             whiteV = new ImageIcon(image1);
-            image = ImageIO.read(new File("Pieces/images/blackrook.png"));
+            image = ImageIO.read(new File("images/blackrook.png"));
             image1 = image.getScaledInstance(100, 100, java.awt.Image.SCALE_SMOOTH);
             blackV = new ImageIcon(image1);
         } catch (IOException io) {
@@ -58,6 +58,8 @@ public class Rook implements Piece<Rook>{
         int xInc = Integer.compare(x1 - x, 0);
         int yInc = Integer.compare(y1 - y, 0);
         int j = Math.max(Math.abs(x - x1), Math.abs(y - y1));
+        int tX = x;
+        int tY = y;
         for (int i = 1; i < j; i++){
             x += xInc;
             y += yInc;
@@ -65,10 +67,14 @@ public class Rook implements Piece<Rook>{
                 return false;
             }
         }
-        return c.getPiece(x1, y1) == null || c.getPiece(x1, y1).getIsWhite() != c.getPiece(x, y).getIsWhite();
+        return c.getPiece(x1, y1) == null || c.getPiece(x1, y1).getIsWhite() != c.getPiece(tX, tY).getIsWhite();
     }
     @Override
     public Rook getSelf() {
         return this;
+    }
+    @Override
+    public String toString(){
+        return "Rook";
     }
 }

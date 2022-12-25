@@ -43,10 +43,10 @@ public class Pawn implements Piece<Pawn>{
     }
     public void loadImages() {
         try {
-            Image image = ImageIO.read(new File("Pieces/images/whitepawn.png"));
+            Image image = ImageIO.read(new File("images/whitepawn.png"));
             Image image1 = image.getScaledInstance(100, 100, java.awt.Image.SCALE_SMOOTH);
             whiteV = new ImageIcon(image1);
-            image = ImageIO.read(new File("Pieces/images/blackpawn.png"));
+            image = ImageIO.read(new File("images/blackpawn.png"));
             image1 = image.getScaledInstance(100, 100, java.awt.Image.SCALE_SMOOTH);
             blackV = new ImageIcon(image1);
         } catch (IOException io) {
@@ -67,6 +67,10 @@ public class Pawn implements Piece<Pawn>{
     @Override
     public Pawn getSelf() {
         return this;
+    }
+    @Override
+    public String toString(){
+        return "Pawn";
     }
 }
 
