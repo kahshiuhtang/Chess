@@ -5,8 +5,7 @@ import Pieces.*;
 public class ChessBoard {
 
     private final Square[][] board;
-    private final String b = "Black";
-    private final String w = "White";
+    private boolean whiteTurn = true;
 
     //Creates a board digitally to reprsent and sets each piece up
     public ChessBoard() {
@@ -39,6 +38,12 @@ public class ChessBoard {
             board[6][i].setPiece(new Pawn(6, i, true));
         }
     }
+    public void changeTurn(){
+        whiteTurn = !whiteTurn;
+    }
+    public boolean getWhiteTurn(){
+        return whiteTurn;
+    }
     //Accessors
     public Square getSquare(int x, int y) {
         return board[x][y];
@@ -52,10 +57,11 @@ public class ChessBoard {
     public void setPiece(int x, int y, int x1, int y1) {
         board[x1][y1].setPiece(board[x][y].getPiece());
         board[x][y].removePiece();
+        board[x1][y1].getPiece().setMoved();
     }
 
     //Just sets specific piece down on specific spot
-    public void setPiece(int x, int y, Piece p) {
+    public void setPiece(int x, int y, Piece<?> p) {
         board[x][y].setPiece(null);
         board[x][y].setPiece(p);
     }
@@ -147,9 +153,18 @@ public class ChessBoard {
         }
         return false;
     }
-    //Not finished; for a rainy day
     public boolean checkGameEnd(boolean whitesTurn) {
-        return true;
+        int kX = 0, kY = 0;
+        for(int i = 0; i < 8; i++){
+            for(int j = 0; j < 8; j++){
+                if(board[i][j].getPiece()!= null && board[i][j].getPiece().getIsWhite() == whitesTurn && board[i][j].getPiece().toString().equals("King")){
+                    kX = i;
+                    kY = j;
+                }
+            }
+        }
+        //Would need to check that king can't move, no pieces can block and attacking piece cant be taken
+        return false;
     }
     //Checks that the spot you are checking for is on the board
     public boolean checkOnBoard(int x, int y) {
