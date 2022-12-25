@@ -42,10 +42,10 @@ public class Rook implements Piece<Rook>{
 
     public void loadImages() {
         try {
-            Image image = ImageIO.read(new File("images/whiterook.png"));
+            Image image = ImageIO.read(new File("Pieces/images/whiterook.png"));
             Image image1 = image.getScaledInstance(100, 100, java.awt.Image.SCALE_SMOOTH);
             whiteV = new ImageIcon(image1);
-            image = ImageIO.read(new File("images/blackrook.png"));
+            image = ImageIO.read(new File("Pieces/images/blackrook.png"));
             image1 = image.getScaledInstance(100, 100, java.awt.Image.SCALE_SMOOTH);
             blackV = new ImageIcon(image1);
         } catch (IOException io) {

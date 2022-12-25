@@ -42,10 +42,10 @@ public class Knight implements Piece<Knight>{
     }
     public void loadImages() {
         try {
-            Image image = ImageIO.read(new File("images/whiteknight.png"));
+            Image image = ImageIO.read(new File("Pieces/images/whiteknight.png"));
             Image image1 = image.getScaledInstance(100, 100, java.awt.Image.SCALE_SMOOTH);
             whiteV = new ImageIcon(image1);
-            image = ImageIO.read(new File("images/blackknight.png"));
+            image = ImageIO.read(new File("Pieces/images/blackknight.png"));
             image1 = image.getScaledInstance(100, 100, java.awt.Image.SCALE_SMOOTH);
             blackV = new ImageIcon(image1);
         } catch (IOException io) {

@@ -43,10 +43,10 @@ public class Bishop implements Piece<Bishop> {
 
     public void loadImages() {
         try {
-            Image image = ImageIO.read(new File("images/whitebishop.png"));
+            Image image = ImageIO.read(new File("Pieces/images/whitebishop.png"));
             Image image1 = image.getScaledInstance(100, 100, java.awt.Image.SCALE_SMOOTH);
             whiteV = new ImageIcon(image1);
-            image = ImageIO.read(new File("images/blackbishop.png"));
+            image = ImageIO.read(new File("Pieces/images/blackbishop.png"));
             image1 = image.getScaledInstance(100, 100, java.awt.Image.SCALE_SMOOTH);
             blackV = new ImageIcon(image1);
         } catch (IOException io) {
