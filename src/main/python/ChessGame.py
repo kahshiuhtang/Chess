@@ -1,4 +1,5 @@
 from ChessPieces import check_bishop, check_rook, check_knight, check_queen, check_king, check_pawn, convert
+import numpy as np
 
 
 def validate_move(move):
@@ -16,19 +17,20 @@ def validate_move(move):
 
 
 class ChessGame:
+    """Representation of a Chess Board"""
     PIECES = {"P", "K", "N", "Q", "R", "B"}
     CORNERS = {"h1": 0, "h8": 1, "a1": 2, "a8": 3}
     KINGS = {"e1": 4, "e8": 5}
 
     def __init__(self):
-        self.board = [["bR", "bN", "bB", "bQ", "bK", "--", "--", "bR"],
-                      ["bP", "bP", "bP", "bP", "bP", "bP", "bP", "bP"],
-                      ["--", "--", "--", "--", "--", "--", "--", "--"],
-                      ["--", "--", "--", "--", "--", "--", "--", "--"],
-                      ["--", "--", "--", "--", "--", "bP", "--", "--"],
-                      ["--", "--", "--", "--", "--", "--", "--", "--"],
-                      ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"],
-                      ["wR", "--", "--", "--", "wK", "--", "bP", "wR"]]
+        self.board = np.array([["bR", "bN", "bB", "bQ", "bK", "--", "--", "bR"],
+                               ["bP", "bP", "bP", "bP", "bP", "bP", "bP", "bP"],
+                               ["--", "--", "--", "--", "--", "--", "--", "--"],
+                               ["--", "--", "--", "--", "--", "--", "--", "--"],
+                               ["--", "--", "--", "--", "--", "bP", "--", "--"],
+                               ["--", "--", "--", "--", "--", "--", "--", "--"],
+                               ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"],
+                               ["wR", "--", "--", "--", "wK", "--", "bP", "wR"]])
         # ["wR", "wN", "wB", "wQ", "wK", "--", "wN", "wR"]
         # ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"]
         self.moved = [False, False, False, False, False, False] #uL -> uR -> bL -> bR -> wK -> bK of rooks
@@ -36,6 +38,12 @@ class ChessGame:
         self.movedPawns = [[False, False, False, False, False, False, False, False],
                            [False, False, False, False, False, False, False, False]]
         self.moves = []
+        self.black_material = [[],
+                               [],
+                               [],
+                               [],
+                               [],] #Piece and Location
+        self.white_material = {}
 
     def move_piece(self, move):
         if not validate_move(move):
@@ -95,7 +103,23 @@ class ChessGame:
             print(move, end="->")
         print("END")
 
+    def possible_moves(self, coords):
+        pieceType = coords[1]
+        if pieceType == "R":
+            return valid_rook(coords, self.board)
+        elif pieceType == "N":
+            return valid_knight(coords, self.board)
+        elif pieceType == "B":
+            return valid_bishop(coords, self.board)
+        elif pieceType == "Q":
+            return valid_queen(coords, self.board)
+        elif pieceType == "K":
+            return valid_king(coords, self.board, self.moved)
+        elif pieceType == "P":
+            return valid_pawn(coords, self.board, self.moves, self.movedPawns)
 
+
+# Methods to Add: squaresCovered, inCheck, checkMate, pinned, possible_moves
 c = ChessGame()
 #c.move("wRh1g1")
 #c.move("bPe7e5")

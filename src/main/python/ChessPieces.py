@@ -1,3 +1,5 @@
+import numpy as np
+
 
 def check_bishop(move,game):
     coords = convert(move)
@@ -67,13 +69,13 @@ def check_king(move, game, rooks):
     yDif = abs(coords[1] - coords[3])
     is_white = "b" if move[0] == "b" else "w"
     if yDif == 2 and xDif == 0:
-        return check_castle(coords, game, is_white, rooks, move)
+        return check_castle(coords, game, is_white, rooks)
     elif yDif == 1 and xDif == 1:
         return game[coords[2]][coords[3]] == "--" or not is_white == game[coords[2]][coords[3]][0]
     return False
 
 
-def check_castle(coords, game, is_white, rooks, move):
+def check_castle(coords, game, is_white, rooks):
     row = 0 if is_white == "b" else 2
     squaresToCheck = 3 if coords[3] - coords[1] < 0 else 2
     inc = -1 if squaresToCheck == 3 else 1
@@ -84,7 +86,6 @@ def check_castle(coords, game, is_white, rooks, move):
     add = 0 if squaresToCheck == 3 else 1
     row += add
     return not rooks[row]
-
 
 
 def check_knight(move, game):
@@ -98,7 +99,7 @@ def check_knight(move, game):
 
 
 def convert_s(symbol):
-    return (ord(symbol) - 97)
+    return ord(symbol) - 97
 
 
 def convert_n(num):
@@ -113,3 +114,94 @@ def convert(move):
     return [x1, y1, x2, y2]
 
 
+def valid_rook(coords, board):
+    xy = [convert_n(coords[3]), convert_s(coords[2])]
+    is_white = coords[0]
+    return check_direction(xy, is_white, board, 1, 0) + check_direction(xy, is_white, board, -1, 0) + check_direction(
+        xy, is_white, board, 0, -1) + check_direction(xy, is_white, board, 0, 1)
+
+
+def valid_bishop(coords, board):
+    xy = [convert_n(coords[3]), convert_s(coords[2])]
+    is_white = coords[0]
+    return check_direction(xy, is_white, board, 1, 1) + check_direction(xy, is_white, board, -1, -1) + check_direction(
+        xy, is_white, board, 1, -1) + check_direction(xy, is_white, board, -1, 1)
+
+
+def valid_queen(coords, board):
+    return valid_bishop(coords, board) + valid_rook(coords, board)
+
+
+def valid_knight(coords, board):
+    moves = [[1,2],[2,1],[-1,2],[2,-1],[-1,-2],[-2,-1],[1,-2],[-2,1]]
+    ans = []
+    xy = [convert_n(coords[3]), convert_s(coords[2])]
+    is_white = coords[0]
+    for move in moves:
+        x = xy[0] + move[0]
+        y = xy[1] + move[1]
+        if in_bounds(x, y) and board[x][y][0] != is_white:
+            ans.append((x, y))
+    return ans
+
+
+def in_bounds(x, y):
+    return 8 > x >= 0 and 8 > y >= 0
+
+
+def valid_king(coords, board, moved):
+    ans = []
+    x = convert_n(coords[3])
+    y = convert_s(coords[2])
+    is_white = coords[0]
+    for i in range(-1, 2):
+        x1 = x + i
+        for j in range(-1, 2):
+            y1 = y + j
+            if in_bounds(x1,y1) and board[x1][y1][0] != is_white:
+                ans.append((x1, y1))
+    orig = 7 if is_white == "w" else 0
+    ind = 4 if is_white == "w" else 5
+    ind1 = 2 if is_white == "w" else 0
+    c = coords + "g" + str(8-orig)
+    if not moved[ind] and board[orig][0][1] == "R" and not moved[ind1] and check_castle(convert(c), board, is_white, moved):
+        ans.append((orig, 2))
+    c = coords + "c" + str(8 - orig)
+    if not moved[ind] and board[orig][7][1] == "R" and not moved[ind1+1] and check_castle(convert(c), board, is_white, moved):
+        ans.append((orig, 6))
+    return ans
+
+
+def check_direction(xy, is_white, board, x_inc, y_inc):
+    ans = []
+    x = xy[0]
+    y = xy[1]
+    for i in range(8):
+        x += x_inc
+        y += y_inc
+        if x < 0 or x > 7 or y < 0 or y > 7:
+            return ans
+        temp = board[x][y]
+        if (not temp == "--") and (temp[0] == is_white):
+            return ans
+        if (not temp == "--") and (temp[0] != is_white):
+            ans.append((x, y))
+            return ans
+        ans.append((x, y))
+
+
+def valid_pawn(coords, board, moves, movedPawns):
+    return False
+
+
+board = [["bR", "--", "--", "--", "bK", "--", "--", "bR"],
+         ["--", "wB", "--", "--", "--", "wB", "--", "--"],
+         ["--", "--", "--", "--", "--", "--", "--", "--"],
+         ["--", "--", "--", "wB", "--", "--", "--", "--"],
+         ["--", "--", "wB", "wN", "wB", "--", "--", "--"],
+         ["--", "--", "--", "--", "--", "--", "--", "--"],
+         ["--", "--", "--", "--", "--", "--", "--", "--"],
+         ["wR", "--", "--", "--", "wK", "--", "--", "wR"]]
+
+arr = [False,False,False,False,False,False,]
+print(len(valid_king("bKe8", board, arr)))
