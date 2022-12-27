@@ -202,23 +202,30 @@ def valid_pawn(coords, board, moves, movedPawns):
         ans.append((x+inc, y))
     if first == x and not movedPawns[ind][y] and board[x+inc*2][y] == "--" and board[x+inc][y] == "--":
         ans.append((x+inc*2, y))
-    if in_bounds(x + inc, y - 1) and not board[x + inc][y - 1][0] == is_white:
+    if in_bounds(x + inc, y - 1) and not board[x + inc][y-1] == "--" and not board[x + inc][y - 1][0] == is_white:
         ans.append((x + inc, y - 1))
-    if in_bounds(x + inc, y + 1) and not board[x + inc][y + 1][0] == is_white:
+    if in_bounds(x + inc, y + 1) and not board[x + inc][y+1] == "--" and not board[x + inc][y + 1][0] == is_white:
         ans.append((x + inc, y + 1))
-    # Need to Check En-Passant
+    if len(moves) == 0:
+        return ans
+    prev = moves[len(moves)-1]
+    x1 = convert_n(prev[5])
+    y1 = convert_s(prev[4])
+    if board[x1][y1][1] == "P" and not board[x1][y1][0] == is_white and x1 == x and abs(y1-y) == 1 and \
+            board[x1+inc][y1] == "--":
+        ans.append((x+inc, y1))
     return ans
 
 
 board = [["bR", "--", "--", "--", "bK", "--", "--", "bR"],
-         ["--", "wB", "--", "--", "--", "wB", "--", "--"],
+         ["wP", "bP", "wP", "--", "--", "wB", "--", "--"],
          ["--", "--", "--", "--", "--", "--", "--", "--"],
          ["--", "--", "--", "wB", "--", "--", "--", "--"],
          ["--", "--", "wB", "wN", "wB", "--", "wP", "--"],
-         ["--", "bP", "--", "--", "--", "--", "--", "--"],
-         ["wP", "--", "--", "--", "--", "wP", "--", "--"],
+         ["--", "--", "--", "--", "--", "--", "--", "--"],
+         ["wP", "bP", "--", "--", "--", "wP", "--", "--"],
          ["wR", "--", "--", "--", "wK", "--", "--", "wR"]]
 
 arr = [[False, False, False, False, False, False, False, False],
        [False, False, False, False, False, False, False, False,]]
-print(valid_pawn("wPa2", board, [], arr))
+print(valid_pawn("bPb7", board, ["wPc6c7"], arr))

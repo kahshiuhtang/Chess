@@ -21,6 +21,7 @@ class ChessGame:
     PIECES = {"P", "K", "N", "Q", "R", "B"}
     CORNERS = {"h1": 0, "h8": 1, "a1": 2, "a8": 3}
     KINGS = {"e1": 4, "e8": 5}
+    IND = {"P": 0, "K": 1, "N": 2, "Q": 3, "R": 4, "B": 5}
 
     def __init__(self):
         self.board = np.array([["bR", "bN", "bB", "bQ", "bK", "--", "--", "bR"],
@@ -38,12 +39,10 @@ class ChessGame:
         self.movedPawns = [[False, False, False, False, False, False, False, False],
                            [False, False, False, False, False, False, False, False]]
         self.moves = []
-        self.black_material = [[],
-                               [],
-                               [],
-                               [],
-                               [],] #Piece and Location
-        self.white_material = {}
+        self.black_material = np.array([{"a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7"}, {"e8"},
+                                        {"b8", "g8"}, {"d8"}, {"a8", "h8"}, {"c8", "f8"}])
+        self.white_material = np.array([{"a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2"}, {"e1"}, {"b1", "g1"}, {"d1"},
+                                        {"a1", "h1"}, {"c1", "f1"}])
 
     def move_piece(self, move):
         if not validate_move(move):
@@ -68,29 +67,55 @@ class ChessGame:
     def move(self, move):
         if self.move_piece(move):
             coords = convert(move) #Make sure to mark that king or rook has moved
+            self.handleSet(move)
             self.board[coords[2]][coords[3]] = move[0:2]
             self.board[coords[0]][coords[1]] = "--"
             row = 7 if move[0] == "w" else 0
-            if move[1] == "K" and move[2:4] in ChessGame.KINGS.keys():
+            if move[1] == "K" and move[2:4] in ChessGame.KINGS.keys(): #King has moved
                 self.moved[int(ChessGame.CORNERS[move[2:4]])] = True
-            if move[1] == "R" and move[2:4] in ChessGame.CORNERS.keys():
+            if move[1] == "R" and move[2:4] in ChessGame.CORNERS.keys(): #Rook has moved
                 self.moved[int(ChessGame.CORNERS[move[2:4]])] = True
-            if move[1] == "P" and (move[3] == "7" or move[3] == "2"):
+            if move[1] == "P" and (move[3] == "7" or move[3] == "2"): #Pawn has moved
                 row = 0 if move[0] == "w" else 1
                 self.movedPawns[row][coords[1]] = True
-            if move[1] == "P" and not move[2] == move[4]:
+            if move[1] == "P" and not move[2] == move[4]: #En Passant
                 inc = 1 if move[0] == "w" else -1
                 self.board[coords[2]+inc][coords[3]] = "--"
-            if move[1] == "K" and abs(coords[1] - coords[3]) == 2 and abs(coords[0] - coords[2]) == 0 and move[4] == "g":
+                st = move[4] + str(int(move[5]) + inc)
+                arr = self.black_material if move[0] == "w" else self.white_material
+                arr[0].remove(st)
+            if move[1] == "K" and abs(coords[1] - coords[3]) == 2 and abs(coords[0] - coords[2]) == 0 and move[4] == "g": #Castle Kingside
                 self.board[row][5] = move[0]+"R"
                 self.board[row][7] = "--"
-            elif move[1] == "K" and abs(coords[1] - coords[3]) == 2 and abs(coords[0] - coords[2]) == 0:
+                arr = self.black_material if move[0] == "b" else self.white_material
+                coords1 = "h8" if move[0] == "b" else "h1"
+                coords2 = "f8" if move[0] == "b" else "f1"
+                arr[4].remove(coords1)
+                arr[4].add(coords2)
+            elif move[1] == "K" and abs(coords[1] - coords[3]) == 2 and abs(coords[0] - coords[2]) == 0: #Castle Queenside
                 self.board[row][3] = move[0]+"R"
                 self.board[row][0] = "--"
+                arr = self.black_material if move[0] == "b" else self.white_material
+                coords1 = "a8" if move[0] == "b" else "a1"
+                coords2 = "d8" if move[0] == "b" else "d1"
+                arr[4].remove(coords1)
+                arr[4].add(coords2)
             self.turn = "w" if self.turn == "b" else "b"
             self.moves.append(move)
             return True
         return False
+
+    def handleSet(self, move):
+        arr = self.black_material if move[0] == "b" else self.white_material
+        ind = int(ChessGame.IND[move[1]])
+        arr[ind].remove(move[2:4])
+        arr[ind].add(move[4:6])
+        if len(move) == 7 and move[6] == "x":
+            arr = self.black_material if move[0] == "w" else self.white_material
+            c = [convert_s(move[5]), convert_n(move[4])]
+            p = board[c[0]][c[1]][1]
+            arr[p].remove(move[4:6])
+
 
     def print_board(self):
         for i in range(8):
@@ -127,7 +152,9 @@ class ChessGame:
     def check_mate(self):
         return False
 
-    def pinned(self):
+    def pinned(self, coords):
+        print(self.black_material)
+        print(self.white_material)
         return False
 
 
@@ -137,6 +164,7 @@ c = ChessGame()
 #c.move("wKe1g1")
 #c.move("bKe8g8")
 c.move("wPe2e4")
-c.move("bPf4e3")
+c.move("bPf7f5")
 c.print_board()
 c.print_moves()
+c.pinned("")
