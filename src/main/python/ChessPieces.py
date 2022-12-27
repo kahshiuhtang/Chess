@@ -217,6 +217,20 @@ def valid_pawn(coords, board, moves, movedPawns):
     return ans
 
 
+def axis(board, x, y,  x_inc, y_inc, piece, color):
+    queen = color + "Q"
+    for i in range(7):
+        x += x_inc
+        y += y_inc
+        if not in_bounds(x, y):
+            return False
+        if board[x][y] == piece or board[x][y] == queen:
+            return True
+        if not board[x][y] == "--":
+            return False
+    return False
+
+
 board = [["bR", "--", "--", "--", "bK", "--", "--", "bR"],
          ["wP", "bP", "wP", "--", "--", "wB", "--", "--"],
          ["--", "--", "--", "--", "--", "--", "--", "--"],

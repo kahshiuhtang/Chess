@@ -6,6 +6,7 @@
   * Stored in an array of sets
   * Must update the set each time you move it
   * Erase if it is captured
+  * Need to add array of taken pieces
 * Pinned:
   * If there is an attacking piece and on the other side is the king
   * Find if axis between king lines up

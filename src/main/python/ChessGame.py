@@ -44,6 +44,7 @@ class ChessGame:
                                         {"b8", "g8"}, {"d8"}, {"a8", "h8"}, {"c8", "f8"}])
         self.white_material = np.array([{"a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2"}, {"e1"}, {"b1", "g1"}, {"d1"},
                                         {"a1", "h1"}, {"c1", "f1"}])
+        self.taken_material = np.array([])
 
     def move_piece(self, move):
         if not validate_move(move):
@@ -65,8 +66,8 @@ class ChessGame:
             return check_pawn(move, self.board, self.moves, self.movedPawns)
         return False
 
-    def move(self, move):
-        if self.move_piece(move):
+    def move(self, move, dont_check=False):
+        if dont_check or self.move_piece(move):
             coords = convert(move) #Make sure to mark that king or rook has moved
             self.handle_set(move)
             self.board[coords[2]][coords[3]] = move[0:2]
@@ -85,6 +86,8 @@ class ChessGame:
                 st = move[4] + str(int(move[5]) + inc)
                 arr = self.black_material if move[0] == "w" else self.white_material
                 arr[0].remove(st)
+                s = ("w" if move[0] == "b" else "b") + "P" + st
+                self.taken_material.append(s)
             if move[1] == "K" and abs(coords[1] - coords[3]) == 2 and abs(coords[0] - coords[2]) == 0 and move[4] == "g": #Castle Kingside
                 self.board[row][5] = move[0]+"R"
                 self.board[row][7] = "--"
@@ -115,6 +118,7 @@ class ChessGame:
             arr = self.black_material if move[0] == "w" else self.white_material
             c = [convert_s(move[5]), convert_n(move[4])]
             p = board[c[0]][c[1]][1]
+            s = ("w" if move[0] == "b" else "b") + str(p) + move[4:6]
             arr[p].remove(move[4:6])
 
     def print_board(self):
@@ -143,11 +147,29 @@ class ChessGame:
         elif pieceType == "P":
             return valid_pawn(coords, self.board, self.moves, self.movedPawns)
 
-    def squares_covered(self):
-        return []
-
-    def in_check(self):
-        return []
+    def in_check(self, is_white):
+        arr = self.black_material if not is_white else self.white_material
+        knight_move = [[1, 2], [2, 1], [-1, 2], [2, -1], [-1, -2], [-2, -1], [1, -2], [-2, 1]]
+        attack_inc = -1 if is_white == "w" else 1
+        xy = arr[1].pop()
+        arr[1].add(xy)
+        kx, ky = convert_n(xy[1]), convert_s(xy[0])
+        opp = "bK" if is_white else "wK"
+        for move in knight_move:
+            if in_bounds(kx + move[0], ky + move[1]) and self.board[kx + move[0]][ky + move[1]] == opp:
+                return True
+        opp = opp[0]
+        piece = opp + "R"
+        if axis(self.board, kx, ky, 1, 0, piece, opp) or axis(self.board, kx, ky, -1, 0, piece, opp) or axis(self.board, kx, ky, 0, 1, piece, opp) or axis(self.board, kx, ky, 0, -1, piece, opp):
+            return True
+        piece = opp + "B"
+        if axis(self.board, kx, ky, 1, 1, piece, opp) or axis(self.board, kx, ky, -1, -1, piece, opp) or axis(self.board, kx, ky, -1, 1, piece, opp) or axis(self.board, kx, ky, 1, -1, piece, opp):
+            return True
+        # Check Left Pawn
+        piece = opp + "P"
+        if self.board[kx+attack_inc][ky+1] == piece or self.board[kx+attack_inc][ky-1] == piece:
+            return True
+        return False
 
     def check_mate(self):
         return False
