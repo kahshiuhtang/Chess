@@ -1,4 +1,5 @@
-from ChessPieces import check_bishop, check_rook, check_knight, check_queen, check_king, check_pawn, convert
+from ChessPieces import check_bishop, check_rook, check_knight, check_queen, check_king, check_pawn, convert, convert_n, \
+    convert_s, in_bounds
 import numpy as np
 
 
@@ -26,10 +27,10 @@ class ChessGame:
     def __init__(self):
         self.board = np.array([["bR", "bN", "bB", "bQ", "bK", "--", "--", "bR"],
                                ["bP", "bP", "bP", "bP", "bP", "bP", "bP", "bP"],
+                               ["--", "--", "--", "--", "wR", "--", "--", "--"],
                                ["--", "--", "--", "--", "--", "--", "--", "--"],
-                               ["--", "--", "--", "--", "--", "--", "--", "--"],
-                               ["--", "--", "--", "--", "--", "bP", "--", "--"],
-                               ["--", "--", "--", "--", "--", "--", "--", "--"],
+                               ["--", "bQ", "wN", "wK", "bQ", "bP", "--", "--"],
+                               ["--", "--", "--", "--", "wP", "--", "bR", "--"],
                                ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"],
                                ["wR", "--", "--", "--", "wK", "--", "bP", "wR"]])
         # ["wR", "wN", "wB", "wQ", "wK", "--", "wN", "wR"]
@@ -67,7 +68,7 @@ class ChessGame:
     def move(self, move):
         if self.move_piece(move):
             coords = convert(move) #Make sure to mark that king or rook has moved
-            self.handleSet(move)
+            self.handle_set(move)
             self.board[coords[2]][coords[3]] = move[0:2]
             self.board[coords[0]][coords[1]] = "--"
             row = 7 if move[0] == "w" else 0
@@ -105,7 +106,7 @@ class ChessGame:
             return True
         return False
 
-    def handleSet(self, move):
+    def handle_set(self, move):
         arr = self.black_material if move[0] == "b" else self.white_material
         ind = int(ChessGame.IND[move[1]])
         arr[ind].remove(move[2:4])
@@ -115,7 +116,6 @@ class ChessGame:
             c = [convert_s(move[5]), convert_n(move[4])]
             p = board[c[0]][c[1]][1]
             arr[p].remove(move[4:6])
-
 
     def print_board(self):
         for i in range(8):
@@ -153,18 +153,35 @@ class ChessGame:
         return False
 
     def pinned(self, coords):
-        print(self.black_material)
-        print(self.white_material)
+        arr = self.black_material if coords[0] == "b" else self.white_material
+        is_white = coords[0]
+        addr = arr[1].pop()
+        arr[1].add(addr)
+        x, y = convert_n(coords[3]), convert_s(coords[2])
+        kx, ky = convert_n(addr[1]), convert_s(addr[0])
+        if (x-kx == 0 or y-ky == 0) or abs(x-kx) == abs(y-ky): #Aligned on diagonal, row or column
+            incX = 0 if x - kx == 0 else -1 if kx - x > 0 else 1
+            incY = 0 if y - ky == 0 else -1 if ky - y > 0 else 1
+            comp = "B" if incX != 0 and incY != 0 else "R"
+            for i in range(8):
+                x += incX
+                y += incY
+                if not in_bounds(x, y) or (self.board[x][y][0] == is_white):
+                    return False
+                if not self.board[x][y] == "--" and not self.board[x][y][0] == is_white and (self.board[x][y][1] == "Q"
+                                                                                             or self.board[x][y][1] ==
+                                                                                             comp):
+                    return True
         return False
 
 
 c = ChessGame()
+print(c.pinned("bPe7"))
 #c.move("wRh1g1")
 #c.move("bPe7e5")
 #c.move("wKe1g1")
 #c.move("bKe8g8")
-c.move("wPe2e4")
-c.move("bPf7f5")
-c.print_board()
-c.print_moves()
-c.pinned("")
+#c.move("wPe2e4")
+#c.move("bPf7f5")
+#c.print_board()
+#c.print_moves()
