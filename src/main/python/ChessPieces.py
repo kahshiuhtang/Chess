@@ -191,17 +191,34 @@ def check_direction(xy, is_white, board, x_inc, y_inc):
 
 
 def valid_pawn(coords, board, moves, movedPawns):
-    return False
+    ans = []
+    is_white = coords[0]
+    first = 6 if is_white == "w" else 1
+    inc = -1 if is_white == "w" else 1
+    ind = 0 if is_white == "w" else 1
+    x = convert_n(coords[3])
+    y = convert_s(coords[2])
+    if board[x+inc][y] == "--":
+        ans.append((x+inc, y))
+    if first == x and not movedPawns[ind][y] and board[x+inc*2][y] == "--" and board[x+inc][y] == "--":
+        ans.append((x+inc*2, y))
+    if in_bounds(x + inc, y - 1) and not board[x + inc][y - 1][0] == is_white:
+        ans.append((x + inc, y - 1))
+    if in_bounds(x + inc, y + 1) and not board[x + inc][y + 1][0] == is_white:
+        ans.append((x + inc, y + 1))
+    # Need to Check En-Passant
+    return ans
 
 
 board = [["bR", "--", "--", "--", "bK", "--", "--", "bR"],
          ["--", "wB", "--", "--", "--", "wB", "--", "--"],
          ["--", "--", "--", "--", "--", "--", "--", "--"],
          ["--", "--", "--", "wB", "--", "--", "--", "--"],
-         ["--", "--", "wB", "wN", "wB", "--", "--", "--"],
-         ["--", "--", "--", "--", "--", "--", "--", "--"],
-         ["--", "--", "--", "--", "--", "--", "--", "--"],
+         ["--", "--", "wB", "wN", "wB", "--", "wP", "--"],
+         ["--", "bP", "--", "--", "--", "--", "--", "--"],
+         ["wP", "--", "--", "--", "--", "wP", "--", "--"],
          ["wR", "--", "--", "--", "wK", "--", "--", "wR"]]
 
-arr = [False,False,False,False,False,False,]
-print(len(valid_king("bKe8", board, arr)))
+arr = [[False, False, False, False, False, False, False, False],
+       [False, False, False, False, False, False, False, False,]]
+print(valid_pawn("wPa2", board, [], arr))

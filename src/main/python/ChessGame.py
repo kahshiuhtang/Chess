@@ -118,8 +118,19 @@ class ChessGame:
         elif pieceType == "P":
             return valid_pawn(coords, self.board, self.moves, self.movedPawns)
 
+    def squares_covered(self):
+        return []
 
-# Methods to Add: squaresCovered, inCheck, checkMate, pinned, possible_moves
+    def in_check(self):
+        return []
+
+    def check_mate(self):
+        return False
+
+    def pinned(self):
+        return False
+
+
 c = ChessGame()
 #c.move("wRh1g1")
 #c.move("bPe7e5")
