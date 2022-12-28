@@ -61,7 +61,7 @@ class ChessGame:
         elif pieceType == "Q":
             return check_queen(move, self.board, self.pinned)
         elif pieceType == "K":
-            return check_king(move, self.board, self.moved)
+            return check_king(move, self.board, self.moved, self.covered)
         elif pieceType == "P":
             return check_pawn(move, self.board, self.moves, self.movedPawns, self.pinned)
         return False
@@ -74,7 +74,7 @@ class ChessGame:
             self.board[coords[0]][coords[1]] = "--"
             row = 7 if move[0] == "w" else 0
             if move[1] == "K" and move[2:4] in ChessGame.KINGS.keys(): #King has moved
-                self.moved[int(ChessGame.CORNERS[move[2:4]])] = True
+                self.moved[int(ChessGame.KINGS[move[2:4]])] = True
             if move[1] == "R" and move[2:4] in ChessGame.CORNERS.keys(): #Rook has moved
                 self.moved[int(ChessGame.CORNERS[move[2:4]])] = True
             if move[1] == "P" and (move[3] == "7" or move[3] == "2"): #Pawn has moved
@@ -209,14 +209,9 @@ class ChessGame:
             ans.append((-1, 1))
         if axis(self.board, kx, ky, 1, -1, piece, opp):
             ans.append((1, -1))
-        piece = opp + "P"
-        if self.board[kx+attack_inc][ky+1] == piece:
-            ans.append((kx+attack_inc, ky+1, 0))
-        if self.board[kx+attack_inc][ky-1] == piece:
-            ans.append((kx+attack_inc, ky-1, 0))
         return ans
 
-    def check_mate(self, coords):
+    def checkmate(self, coords):
         is_white = True if coords[0] == "w" else False
         x, y = convert_n(coords[3]), convert_s(coords[2])
         if not self.in_check(is_white):
@@ -226,7 +221,10 @@ class ChessGame:
                     move = coords + revert(x + i, y + j)
                     if check_king(move, self.board, self.moved):
                         return False
-        check_dirs = self.check_dir(is_white)
+        check_dir = self.check_dir(is_white)
+        if len(check_dir) > 1:
+            return True
+
         # Finish checking for blockers in directions
         return False
 
@@ -246,7 +244,7 @@ class ChessGame:
         inc = 1 if look == "w" else -1
         kM = [[1, 2], [2, 1], [-1, 2], [2, -1], [-1, -2], [-2, -1], [1, -2], [-2, 1]]
         for move in kM:
-            if self.board[x+move[0]][y+move[1]] == piece:
+            if in_bounds(x+move[0], y+move[1]) and self.board[x+move[0]][y+move[1]] == piece:
                 st = piece + revert(x+move[0], y+move[1])
                 if not self.pinned(st):
                     ans.append(st)
@@ -307,15 +305,16 @@ class ChessGame:
         return False
 
 
-# Need methods: Find possible moves for side, Handles Promotion, Fix Check King to avoid bring in check
+# Need methods: Find possible moves for side, Handles Promotion
+
 c = ChessGame()
-print(c.covered(4, 3, "w"))
+c.move("wKe1f1")
 c.print_board()
-#c.move("wRh1g1")
-#c.move("bPe7e5")
-#c.move("wKe1g1")
-#c.move("bKe8g8")
-#c.move("wPe2e4")
-#c.move("bPf7f5")
-#c.print_board()
-#c.print_moves()
+# c.move("wRh1g1")
+# c.move("bPe7e5")
+# c.move("wKe1g1")
+# c.move("bKe8g8")
+# c.move("wPe2e4")
+# c.move("bPf7f5")
+# c.print_board()
+# c.print_moves()

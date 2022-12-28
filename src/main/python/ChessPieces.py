@@ -78,10 +78,10 @@ def check_king(move, game, rooks, covered):
     is_white = move[0]
     if yDif == 2 and xDif == 0:
         return check_castle(coords, game, is_white, rooks)
-    elif yDif == 1 and xDif == 1:
+    elif yDif == 1 or xDif == 1:
         if game[coords[2]][coords[3]] == "--" or not is_white == game[coords[2]][coords[3]][0]:
             cov = "w" if move[0] == "b" else "b"
-            return not covered(coords[0], coords[1], cov)
+            return len(covered(coords[2], coords[3], cov)) == 0
     return False
 
 
