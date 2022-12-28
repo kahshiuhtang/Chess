@@ -1,5 +1,5 @@
 from ChessPieces import check_bishop, check_rook, check_knight, check_queen, check_king, check_pawn, convert, convert_n, \
-    convert_s, in_bounds
+    convert_s, in_bounds, axis, revert
 import numpy as np
 
 
@@ -27,11 +27,11 @@ class ChessGame:
     def __init__(self):
         self.board = np.array([["bR", "bN", "bB", "bQ", "bK", "--", "--", "bR"],
                                ["bP", "bP", "bP", "bP", "bP", "bP", "bP", "bP"],
-                               ["--", "--", "--", "--", "wR", "--", "--", "--"],
-                               ["--", "--", "--", "--", "--", "--", "--", "--"],
-                               ["--", "bQ", "wN", "wK", "bQ", "bP", "--", "--"],
-                               ["--", "--", "--", "--", "wP", "--", "bR", "--"],
-                               ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"],
+                               ["--", "--", "wN", "--", "wN", "--", "--", "--"],
+                               ["--", "wN", "--", "--", "--", "--", "--", "--"],
+                               ["--", "bQ", "wN", "wK", "--", "bP", "--", "--"],
+                               ["--", "--", "--", "--", "--", "wN", "bR", "--"],
+                               ["wP", "wP", "wP", "wP", "wP", "bR", "wP", "wP"],
                                ["wR", "--", "--", "--", "wK", "--", "bP", "wR"]])
         # ["wR", "wN", "wB", "wQ", "wK", "--", "wN", "wR"]
         # ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"]
@@ -53,17 +53,17 @@ class ChessGame:
             return False
         pieceType = move[1]
         if pieceType == "R":
-            return check_rook(move, self.board)
+            return check_rook(move, self.board, self.pinned)
         elif pieceType == "N":
-            return check_knight(move, self.board)
+            return check_knight(move, self.board, self.pinned)
         elif pieceType == "B":
-            return check_bishop(move, self.board)
+            return check_bishop(move, self.board, self.pinned)
         elif pieceType == "Q":
-            return check_queen(move, self.board)
+            return check_queen(move, self.board, self.pinned)
         elif pieceType == "K":
             return check_king(move, self.board, self.moved)
         elif pieceType == "P":
-            return check_pawn(move, self.board, self.moves, self.movedPawns)
+            return check_pawn(move, self.board, self.moves, self.movedPawns, self.pinned)
         return False
 
     def move(self, move, dont_check=False):
@@ -135,25 +135,29 @@ class ChessGame:
     def possible_moves(self, coords):
         pieceType = coords[1]
         if pieceType == "R":
-            return valid_rook(coords, self.board)
+            return valid_rook(coords, self.board, self.pinned)
         elif pieceType == "N":
-            return valid_knight(coords, self.board)
+            return valid_knight(coords, self.board, self.pinned)
         elif pieceType == "B":
-            return valid_bishop(coords, self.board)
+            return valid_bishop(coords, self.board, self.pinned)
         elif pieceType == "Q":
-            return valid_queen(coords, self.board)
+            return valid_queen(coords, self.board, self.pinned)
         elif pieceType == "K":
             return valid_king(coords, self.board, self.moved)
         elif pieceType == "P":
-            return valid_pawn(coords, self.board, self.moves, self.movedPawns)
+            return valid_pawn(coords, self.board, self.moves, self.movedPawns, self.pinned)
 
-    def in_check(self, is_white):
+    def in_check(self, is_white, x=-1, y=-1):
         arr = self.black_material if not is_white else self.white_material
         knight_move = [[1, 2], [2, 1], [-1, 2], [2, -1], [-1, -2], [-2, -1], [1, -2], [-2, 1]]
-        attack_inc = -1 if is_white == "w" else 1
-        xy = arr[1].pop()
-        arr[1].add(xy)
-        kx, ky = convert_n(xy[1]), convert_s(xy[0])
+        attack_inc = -1 if is_white else 1
+        if x == -1 and y == -1:
+            xy = arr[1].pop()
+            arr[1].add(xy)
+            kx, ky = convert_n(xy[1]), convert_s(xy[0])
+        else:
+            kx, ky = x, y
+        print(str(kx) + "" + str(ky))
         opp = "bK" if is_white else "wK"
         for move in knight_move:
             if in_bounds(kx + move[0], ky + move[1]) and self.board[kx + move[0]][ky + move[1]] == opp:
@@ -172,7 +176,48 @@ class ChessGame:
         return False
 
     def check_mate(self):
+        # Need to ch
         return False
+
+    def blocker(self, x, y, x_inc, y_inc, look):
+        ans = []
+        for i in range(7):
+            x += x_inc
+            y += y_inc
+            if not in_bounds(x, y):
+                return ans
+            ans = ans + covered(x, y, look)
+        return ans
+
+    def covered(self, x, y, look):
+        ans = []
+        piece = look + "N"
+        kM = [[1, 2], [2, 1], [-1, 2], [2, -1], [-1, -2], [-2, -1], [1, -2], [-2, 1]]
+        for move in kM:
+            if self.board[x+move[0]][y+move[1]] == piece:
+                st = piece + revert(x+move[0], y+move[1])
+                if not self.pinned(st):
+                    ans.append(st)
+        return ans
+
+    def covered_help(self, x, y, x_inc, y_inc, piece1, piece2):
+        ans = []
+        opp = "w" if piece1[0] == "b" else "b"
+        for i in range(7):
+            x += x_inc
+            y += y_inc
+            if not in_bounds(x, y):
+                return ans
+            if self.board[x][y][0] == opp:
+                return ans
+            if self.board[x][y] == piece1:
+                ans.append(piece1 + revert(x, y))
+            if self.board[x][y] == piece2:
+                ans.append(piece2 + revert(x, y))
+        return ans
+
+    def attacks(self, x, y, look):
+        return self.board
 
     def pinned(self, coords):
         arr = self.black_material if coords[0] == "b" else self.white_material
@@ -198,7 +243,8 @@ class ChessGame:
 
 
 c = ChessGame()
-print(c.pinned("bPe7"))
+print(c.covered(4, 3, "w"))
+c.print_board()
 #c.move("wRh1g1")
 #c.move("bPe7e5")
 #c.move("wKe1g1")

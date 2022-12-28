@@ -1,7 +1,9 @@
 import numpy as np
 
 
-def check_bishop(move,game):
+def check_bishop(move, game, pinned):
+    if pinned(move[0:5]):
+        return False
     coords = convert(move)
     if not abs(coords[0]-coords[2]) == abs(coords[1]-coords[3]):
         return False
@@ -19,7 +21,9 @@ def bishop_help(coords, game, x_inc, y_inc, is_white):
     return game[coords[2]][coords[3]] == "--" or not game[coords[2]][coords[3]][0] == is_white
 
 
-def check_pawn(move, game, moves, pawns):
+def check_pawn(move, game, moves, pawns, pinned):
+    if pinned(move[0:5]):
+        return False
     coords = convert(move)
     xDif = abs(coords[0] - coords[2])
     yDif = abs(coords[1] - coords[3])
@@ -41,7 +45,9 @@ def check_pawn(move, game, moves, pawns):
     return False
 
 
-def check_rook(move, game):
+def check_rook(move, game, pinned):
+    if pinned(move[0:5]):
+        return False
     coords = convert(move)
     if not abs(coords[0] - coords[2]) == 0 and not abs(coords[1] - coords[3]) == 0:
         return False
@@ -59,7 +65,9 @@ def rook_help(coords, game, x_inc, y_inc, is_white):
     return game[coords[2]][coords[3]] == "--" or not game[coords[2]][coords[3]][0] == is_white
 
 
-def check_queen(move, game):
+def check_queen(move, game, pinned):
+    if pinned(move[0:5]):
+        return False
     return check_bishop(move, game) or check_rook(move, game)
 
 
@@ -88,7 +96,9 @@ def check_castle(coords, game, is_white, rooks):
     return not rooks[row]
 
 
-def check_knight(move, game):
+def check_knight(move, game, pinned):
+    if pinned(move[0:5]):
+        return False
     coords = convert(move)
     xDif = abs(coords[0]-coords[2])
     yDif = abs(coords[1]-coords[3])
@@ -114,25 +124,33 @@ def convert(move):
     return [x1, y1, x2, y2]
 
 
-def valid_rook(coords, board):
+def valid_rook(coords, board, pinned):
+    if pinned(coords[0:5]):
+        return []
     xy = [convert_n(coords[3]), convert_s(coords[2])]
     is_white = coords[0]
     return check_direction(xy, is_white, board, 1, 0) + check_direction(xy, is_white, board, -1, 0) + check_direction(
         xy, is_white, board, 0, -1) + check_direction(xy, is_white, board, 0, 1)
 
 
-def valid_bishop(coords, board):
+def valid_bishop(coords, board, pinned):
+    if pinned(coords[0:5]):
+        return []
     xy = [convert_n(coords[3]), convert_s(coords[2])]
     is_white = coords[0]
     return check_direction(xy, is_white, board, 1, 1) + check_direction(xy, is_white, board, -1, -1) + check_direction(
         xy, is_white, board, 1, -1) + check_direction(xy, is_white, board, -1, 1)
 
 
-def valid_queen(coords, board):
-    return valid_bishop(coords, board) + valid_rook(coords, board)
+def valid_queen(coords, board, pinned):
+    if pinned(coords[0:5]):
+        return []
+    return valid_bishop(coords, board, pinned) + valid_rook(coords, board, pinned)
 
 
-def valid_knight(coords, board):
+def valid_knight(coords, board, pinned):
+    if pinned(coords[0:5]):
+        return []
     moves = [[1,2],[2,1],[-1,2],[2,-1],[-1,-2],[-2,-1],[1,-2],[-2,1]]
     ans = []
     xy = [convert_n(coords[3]), convert_s(coords[2])]
@@ -190,8 +208,10 @@ def check_direction(xy, is_white, board, x_inc, y_inc):
         ans.append((x, y))
 
 
-def valid_pawn(coords, board, moves, movedPawns):
+def valid_pawn(coords, board, moves, movedPawns, pinned):
     ans = []
+    if pinned(coords[0:5]):
+        return []
     is_white = coords[0]
     first = 6 if is_white == "w" else 1
     inc = -1 if is_white == "w" else 1
@@ -219,6 +239,7 @@ def valid_pawn(coords, board, moves, movedPawns):
 
 def axis(board, x, y,  x_inc, y_inc, piece, color):
     queen = color + "Q"
+    king = ("w" if color == "b" else "b") + "K"
     for i in range(7):
         x += x_inc
         y += y_inc
@@ -226,9 +247,15 @@ def axis(board, x, y,  x_inc, y_inc, piece, color):
             return False
         if board[x][y] == piece or board[x][y] == queen:
             return True
-        if not board[x][y] == "--":
+        if not board[x][y] == "--" and not board[x][y] == king:
             return False
     return False
+
+
+def revert(x, y):
+    fir = chr(ord('a') + y)
+    sec = 8 - int(x)
+    return str(fir) + str(sec)
 
 
 board = [["bR", "--", "--", "--", "bK", "--", "--", "bR"],
@@ -242,4 +269,3 @@ board = [["bR", "--", "--", "--", "bK", "--", "--", "bR"],
 
 arr = [[False, False, False, False, False, False, False, False],
        [False, False, False, False, False, False, False, False,]]
-print(valid_pawn("bPb7", board, ["wPc6c7"], arr))
