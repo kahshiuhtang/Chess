@@ -4,7 +4,6 @@
 
 * Pinned
   * Need to check if it is attacked by two or more pieces
-  * 
 * CheckMate
   * You are in check
   * All valid squares are covered

@@ -27,13 +27,13 @@ class ChessGame:
     def __init__(self):
         self.board = np.array([["bR", "bN", "bB", "bQ", "bK", "--", "--", "bR"],
                                ["bP", "bP", "bP", "bP", "bP", "bP", "bP", "bP"],
-                               ["--", "--", "wN", "--", "wN", "--", "--", "--"],
-                               ["--", "wN", "--", "--", "--", "--", "--", "--"],
-                               ["--", "bQ", "wN", "wK", "--", "bP", "--", "--"],
-                               ["--", "--", "--", "--", "--", "wN", "bR", "--"],
-                               ["wP", "wP", "wP", "wP", "wP", "bR", "wP", "wP"],
+                               ["--", "--", "--", "--", "--", "--", "--", "--"],
+                               ["--", "--", "--", "--", "--", "--", "--", "--"],
+                               ["--", "bQ", "wN", "wK", "--", "--", "--", "--"],
+                               ["--", "--", "--", "--", "--", "--", "--", "--"],
+                               ["wP", "wP", "wP", "--", "--", "--", "--", "--"],
                                ["wR", "--", "--", "--", "wK", "--", "bP", "wR"]])
-        # ["wR", "wN", "wB", "wQ", "wK", "--", "wN", "wR"]
+        # ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
         # ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"]
         self.moved = [False, False, False, False, False, False] #uL -> uR -> bL -> bR -> wK -> bK of rooks
         self.turn = "w"
@@ -143,7 +143,7 @@ class ChessGame:
         elif pieceType == "Q":
             return valid_queen(coords, self.board, self.pinned)
         elif pieceType == "K":
-            return valid_king(coords, self.board, self.moved)
+            return valid_king(coords, self.board, self.moved, self.covered)
         elif pieceType == "P":
             return valid_pawn(coords, self.board, self.moves, self.movedPawns, self.pinned)
 
@@ -175,8 +175,59 @@ class ChessGame:
             return True
         return False
 
-    def check_mate(self):
-        # Need to ch
+    def check_dir(self, is_white, x=-1, y=-1):
+        ans = []
+        arr = self.black_material if not is_white else self.white_material
+        knight_move = [[1, 2], [2, 1], [-1, 2], [2, -1], [-1, -2], [-2, -1], [1, -2], [-2, 1]]
+        attack_inc = -1 if is_white else 1
+        if x == -1 and y == -1:
+            xy = arr[1].pop()
+            arr[1].add(xy)
+            kx, ky = convert_n(xy[1]), convert_s(xy[0])
+        else:
+            kx, ky = x, y
+        opp = "bK" if is_white else "wK"
+        for move in knight_move:
+            if in_bounds(kx + move[0], ky + move[1]) and self.board[kx + move[0]][ky + move[1]] == opp:
+                ans.append((kx + move[0], ky + move[1]))
+        opp = opp[0]
+        piece = opp + "R"
+        if axis(self.board, kx, ky, 1, 0, piece, opp) :
+            ans.append((1,0))
+        if axis(self.board, kx, ky, -1, 0, piece, opp) :
+            ans.append((1, 0))
+        if axis(self.board, kx, ky, 0, 1, piece, opp):
+            ans.append((1, 0))
+        if axis(self.board, kx, ky, 0, -1, piece, opp):
+            ans.append((1,0))
+        piece = opp + "B"
+        if axis(self.board, kx, ky, 1, 1, piece, opp):
+            ans.append((1,1))
+        if axis(self.board, kx, ky, -1, -1, piece, opp):
+            ans.append((-1, -1))
+        if axis(self.board, kx, ky, -1, 1, piece, opp):
+            ans.append((-1, 1))
+        if axis(self.board, kx, ky, 1, -1, piece, opp):
+            ans.append((1, -1))
+        piece = opp + "P"
+        if self.board[kx+attack_inc][ky+1] == piece:
+            ans.append((kx+attack_inc, ky+1, 0))
+        if self.board[kx+attack_inc][ky-1] == piece:
+            ans.append((kx+attack_inc, ky-1, 0))
+        return ans
+
+    def check_mate(self, coords):
+        is_white = True if coords[0] == "w" else False
+        x, y = convert_n(coords[3]), convert_s(coords[2])
+        if not self.in_check(is_white):
+            return False
+        for i in range(-1, 2):
+            for j in range(-1, 2):
+                    move = coords + revert(x + i, y + j)
+                    if check_king(move, self.board, self.moved):
+                        return False
+        check_dirs = self.check_dir(is_white)
+        # Finish checking for blockers in directions
         return False
 
     def blocker(self, x, y, x_inc, y_inc, look):
@@ -186,18 +237,28 @@ class ChessGame:
             y += y_inc
             if not in_bounds(x, y):
                 return ans
-            ans = ans + covered(x, y, look)
+            ans = ans + self.covered(x, y, look)
         return ans
 
     def covered(self, x, y, look):
         ans = []
         piece = look + "N"
+        inc = 1 if look == "w" else -1
         kM = [[1, 2], [2, 1], [-1, 2], [2, -1], [-1, -2], [-2, -1], [1, -2], [-2, 1]]
         for move in kM:
             if self.board[x+move[0]][y+move[1]] == piece:
                 st = piece + revert(x+move[0], y+move[1])
                 if not self.pinned(st):
                     ans.append(st)
+        queen, rook, bishop, king, pawn = look + "Q", look + "R", look + "B", look + "K", look + "P"
+        ans += (self.covered_help(x, y, 1, 0, rook, queen) + self.covered_help(x, y, -1, 0, rook, queen) +
+                self.covered_help(x, y, 0, -1, rook, queen) + self.covered_help(x, y, 0, 1, rook, queen))
+        ans += (self.covered_help(x, y, -1, -1, bishop, queen) + self.covered_help(x, y, 1, -1, bishop, queen) +
+                self.covered_help(x, y, -1, 1, bishop, queen) + self.covered_help(x, y, 1, 1, bishop, queen))
+        if self.board[x+inc][y+1] == pawn and not self.pinned(revert(x+inc, y+1)):
+            ans.append(revert(x+inc, y+1))
+        if self.board[x+inc][y-1] == pawn and not self.pinned(revert(x+inc, y-1)):
+            ans.append(revert(x+inc, y-1))
         return ans
 
     def covered_help(self, x, y, x_inc, y_inc, piece1, piece2):
@@ -211,9 +272,13 @@ class ChessGame:
             if self.board[x][y][0] == opp:
                 return ans
             if self.board[x][y] == piece1:
-                ans.append(piece1 + revert(x, y))
+                loc = piece1 + revert(x, y)
+                if not self.pinned(loc):
+                    ans.append(loc)
             if self.board[x][y] == piece2:
-                ans.append(piece2 + revert(x, y))
+                loc = piece2 + revert(x, y)
+                if not self.pinned(loc):
+                    ans.append(loc)
         return ans
 
     def attacks(self, x, y, look):
@@ -242,6 +307,7 @@ class ChessGame:
         return False
 
 
+# Need methods: Find possible moves for side, Handles Promotion, Fix Check King to avoid bring in check
 c = ChessGame()
 print(c.covered(4, 3, "w"))
 c.print_board()

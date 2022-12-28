@@ -71,15 +71,17 @@ def check_queen(move, game, pinned):
     return check_bishop(move, game) or check_rook(move, game)
 
 
-def check_king(move, game, rooks):
+def check_king(move, game, rooks, covered):
     coords = convert(move)
     xDif = abs(coords[0] - coords[2])
     yDif = abs(coords[1] - coords[3])
-    is_white = "b" if move[0] == "b" else "w"
+    is_white = move[0]
     if yDif == 2 and xDif == 0:
         return check_castle(coords, game, is_white, rooks)
     elif yDif == 1 and xDif == 1:
-        return game[coords[2]][coords[3]] == "--" or not is_white == game[coords[2]][coords[3]][0]
+        if game[coords[2]][coords[3]] == "--" or not is_white == game[coords[2]][coords[3]][0]:
+            cov = "w" if move[0] == "b" else "b"
+            return not covered(coords[0], coords[1], cov)
     return False
 
 
