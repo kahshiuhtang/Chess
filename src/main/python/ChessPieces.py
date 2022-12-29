@@ -41,7 +41,6 @@ def check_pawn(move, game, moves, pawns, pinned):
             return abs(coords2[2] - coords2[0]) == 2 and coords2[3] == coords[3] and coords2[2]+is_white == coords[2]
         else:
             return not game[coords[2]][coords[3]][0] == move[0]
-         # EnPassant, Normal, Check if Moving in Right Direction
     return False
 
 

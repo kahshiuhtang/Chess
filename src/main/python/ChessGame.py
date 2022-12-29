@@ -25,14 +25,14 @@ class ChessGame:
     IND = {"P": 0, "K": 1, "N": 2, "Q": 3, "R": 4, "B": 5}
 
     def __init__(self):
-        self.board = np.array([["bR", "bN", "bB", "bQ", "bK", "--", "--", "bR"],
+        self.board = np.array([["bR", "bN", "bB", "bQ", "bK", "--", "wR", "--"],
                                ["bP", "bP", "bP", "bP", "bP", "bP", "bP", "bP"],
-                               ["--", "--", "--", "--", "--", "--", "--", "--"],
+                               ["--", "--", "--", "--", "bN", "--", "--", "--"],
                                ["--", "--", "--", "--", "--", "--", "--", "--"],
                                ["--", "bQ", "wN", "--", "--", "--", "--", "bB"],
                                ["--", "--", "--", "bR", "bR", "--", "--", "--"],
                                ["wP", "wP", "wP", "wP", "wP", "bP", "--", "bR"],
-                               ["wR", "--", "--", "wR", "wK", "wR", "bQ", "--"]])
+                               ["wR", "--", "--", "wR", "wK", "wR", "--", "--"]])
         # ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
         # ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"]
         self.moved = [False, False, False, False, False, False] #uL -> uR -> bL -> bR -> wK -> bK of rooks
@@ -109,6 +109,40 @@ class ChessGame:
             return True
         return False
 
+    def unmove(self, moves, board, taken):
+        length = len(moves)
+        if length != 0:
+            move = moves[length - 1]
+            strlen = len(move)
+            x2, y2 = convert_n(moves[5]), convert_s(moves[4])
+            x1, y1 = convert_n(moves[3]), convert_s(moves[2])
+            if strlen == 6:
+                board[x2][y2] = "--"
+                board[x1][y1] = move[0:2]
+            elif move[6] == "x":
+                piece = taken[len(taken) - 1]
+                board[x2][y2] = piece
+                board[x1][y1] = move[0:2]
+            else:
+                piece = ("w" if move[0] == "b" else "b") + "P"
+                inc = -1 if move[0] == "b" else 1
+                board[x2+inc][y2] = piece
+                board[x1][y1] = move[0:2]
+            return True
+        return False
+
+    def convert_to_move(self, x1, y1, x2, y2):
+        ans = self.board[x1][y1]
+        ans += str(convert_s(y1)) + str(convert_n(x1)) + str(convert_s(y2)) + str(convert_n(x2))
+        if self.board[x1][y1][1] == "P" and y2 - y1 != 0 and self.board[x2][y2] == "--":
+            ans += "e"
+        elif not self.board[x2][y2] == "--":
+            ans += "x"
+        return ans
+
+    def generate_valid_moveset(self, iswhite):
+        pieces = self.white_material if iswhite else self.black_material
+
     def handle_set(self, move):
         arr = self.black_material if move[0] == "b" else self.white_material
         ind = int(ChessGame.IND[move[1]])
@@ -118,8 +152,9 @@ class ChessGame:
             arr = self.black_material if move[0] == "w" else self.white_material
             c = [convert_s(move[5]), convert_n(move[4])]
             p = board[c[0]][c[1]][1]
-            s = ("w" if move[0] == "b" else "b") + str(p) + move[4:6]
+            s = ("w" if move[0] == "b" else "b") + str(p)
             arr[p].remove(move[4:6])
+            self.taken_material.append(s)
 
     def print_board(self):
         for i in range(8):
@@ -198,13 +233,13 @@ class ChessGame:
         opp = opp[0]
         piece = opp + "R"
         if axis(self.board, kx, ky, 1, 0, piece, opp) :
-            ans.append((1,0))
+            ans.append((1, 0))
         if axis(self.board, kx, ky, -1, 0, piece, opp) :
-            ans.append((1, 0))
+            ans.append((-1, 0))
         if axis(self.board, kx, ky, 0, 1, piece, opp):
-            ans.append((1, 0))
+            ans.append((0, 1))
         if axis(self.board, kx, ky, 0, -1, piece, opp):
-            ans.append((1,0))
+            ans.append((0, -1))
         piece = opp + "B"
         if axis(self.board, kx, ky, 1, 1, piece, opp):
             ans.append((1,1))
@@ -222,7 +257,6 @@ class ChessGame:
                 if x == dir[1] and y != dir[0] or x == dir[0] and y != dir[1]:
                     return True
         return False
-
 
     def checkmate(self, coords):
         is_white = True if coords[0] == "w" else False
@@ -250,7 +284,7 @@ class ChessGame:
         for i in range(7):
             x += x_inc
             y += y_inc
-            if not in_bounds(x, y):
+            if not in_bounds(x, y) or (not self.board[x][y] == "--" and not self.board[x][y][0] == look):
                 return ans
             ans = ans + self.covered(x, y, look)
         return ans
@@ -270,9 +304,9 @@ class ChessGame:
                 self.covered_help(x, y, 0, -1, rook, queen) + self.covered_help(x, y, 0, 1, rook, queen))
         ans += (self.covered_help(x, y, -1, -1, bishop, queen) + self.covered_help(x, y, 1, -1, bishop, queen) +
                 self.covered_help(x, y, -1, 1, bishop, queen) + self.covered_help(x, y, 1, 1, bishop, queen))
-        if in_bounds(x+inc, y+1) and self.board[x+inc][y+1] == pawn and not self.pinned(revert(x+inc, y+1)):
+        if in_bounds(x+inc, y+1) and self.board[x+inc][y+1] == pawn and not self.pinned(look + "P" + revert(x+inc, y+1)):
             ans.append(revert(x+inc, y+1))
-        if in_bounds(x+inc, y-1) and self.board[x+inc][y-1] == pawn and not self.pinned(revert(x+inc, y-1)):
+        if in_bounds(x+inc, y-1) and self.board[x+inc][y-1] == pawn and not self.pinned(look + "P" + revert(x+inc, y-1)):
             ans.append(revert(x+inc, y-1))
         return ans
 
@@ -284,7 +318,7 @@ class ChessGame:
             y += y_inc
             if not in_bounds(x, y):
                 return ans
-            if self.board[x][y][0] == opp:
+            if not self.board[x][y] == "--" and not self.board[x][y] == piece1 and not self.board[x][y] == piece2:
                 return ans
             if self.board[x][y] == piece1:
                 loc = piece1 + revert(x, y)
@@ -325,7 +359,7 @@ class ChessGame:
 # Need methods: Find possible moves for side, Handles Promotion
 
 c = ChessGame()
-print(c.checkmate("wKe1"))
+print(c.checkmate("bKe8"))
 c.print_board()
 # c.move("wRh1g1")
 # c.move("bPe7e5")

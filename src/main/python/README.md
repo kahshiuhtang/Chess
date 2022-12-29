@@ -3,7 +3,7 @@
 ## Details
 
 * Pinned
-  * Need to check if it is attacked by two or more pieces
+  * Is piece pinned if it can eat pinning piece
 * CheckMate
   * You are in check
   * All valid squares are covered
