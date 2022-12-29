@@ -29,10 +29,10 @@ class ChessGame:
                                ["bP", "bP", "bP", "bP", "bP", "bP", "bP", "bP"],
                                ["--", "--", "--", "--", "--", "--", "--", "--"],
                                ["--", "--", "--", "--", "--", "--", "--", "--"],
-                               ["--", "bQ", "wN", "wK", "--", "--", "--", "--"],
-                               ["--", "--", "--", "--", "--", "--", "--", "--"],
-                               ["wP", "wP", "wP", "--", "--", "--", "--", "--"],
-                               ["wR", "--", "--", "--", "wK", "--", "bP", "wR"]])
+                               ["--", "bQ", "wN", "--", "--", "--", "--", "--"],
+                               ["--", "--", "--", "bR", "bR", "bN", "--", "--"],
+                               ["wP", "wP", "wP", "wP", "wP", "wP", "--", "bR"],
+                               ["wR", "--", "--", "wR", "wK", "wR", "bQ", "--"]])
         # ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
         # ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"]
         self.moved = [False, False, False, False, False, False] #uL -> uR -> bL -> bR -> wK -> bK of rooks
@@ -61,7 +61,7 @@ class ChessGame:
         elif pieceType == "Q":
             return check_queen(move, self.board, self.pinned)
         elif pieceType == "K":
-            return check_king(move, self.board, self.moved, self.covered)
+            return check_king(move, self.board, self.moved, self.covered, self.pinned)
         elif pieceType == "P":
             return check_pawn(move, self.board, self.moves, self.movedPawns, self.pinned)
         return False
@@ -158,7 +158,7 @@ class ChessGame:
         else:
             kx, ky = x, y
         print(str(kx) + "" + str(ky))
-        opp = "bK" if is_white else "wK"
+        opp = "bN" if is_white else "wN"
         for move in knight_move:
             if in_bounds(kx + move[0], ky + move[1]) and self.board[kx + move[0]][ky + move[1]] == opp:
                 return True
@@ -186,7 +186,7 @@ class ChessGame:
             kx, ky = convert_n(xy[1]), convert_s(xy[0])
         else:
             kx, ky = x, y
-        opp = "bK" if is_white else "wK"
+        opp = "bN" if is_white else "wN"
         for move in knight_move:
             if in_bounds(kx + move[0], ky + move[1]) and self.board[kx + move[0]][ky + move[1]] == opp:
                 ans.append((kx + move[0], ky + move[1]))
@@ -211,22 +211,34 @@ class ChessGame:
             ans.append((1, -1))
         return ans
 
+    def same_axis(self, x, y, dirs):
+        for dir in dirs:
+            if abs(dir[0]) < 2 and abs(dir[1]) < 2 and len(dir) == 2:
+                if x == dir[1] and y != dir[0] or x == dir[0] and y != dir[1]:
+                    return True
+        return False
+
+
     def checkmate(self, coords):
         is_white = True if coords[0] == "w" else False
         x, y = convert_n(coords[3]), convert_s(coords[2])
+        check_dir = self.check_dir(is_white)
         if not self.in_check(is_white):
             return False
         for i in range(-1, 2):
             for j in range(-1, 2):
+                if not self.same_axis(i, j, check_dir):
                     move = coords + revert(x + i, y + j)
-                    if check_king(move, self.board, self.moved):
+                    if check_king(move, self.board, self.moved, self.covered, self.pinned):
                         return False
-        check_dir = self.check_dir(is_white)
         if len(check_dir) > 1:
             return True
-
-        # Finish checking for blockers in directions
-        return False
+        if len(check_dir) == 0:
+            return False
+        xinc, yinc = check_dir[0][0], check_dir[0][1]
+        col = coords[0]
+        temp = self.blocker(x, y, xinc, yinc, col)
+        return len(temp) == 0
 
     def blocker(self, x, y, x_inc, y_inc, look):
         ans = []
@@ -308,7 +320,7 @@ class ChessGame:
 # Need methods: Find possible moves for side, Handles Promotion
 
 c = ChessGame()
-c.move("wKe1f1")
+print(c.checkmate("wKe1"))
 c.print_board()
 # c.move("wRh1g1")
 # c.move("bPe7e5")
