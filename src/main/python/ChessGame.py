@@ -29,9 +29,9 @@ class ChessGame:
                                ["bP", "bP", "bP", "bP", "bP", "bP", "bP", "bP"],
                                ["--", "--", "--", "--", "--", "--", "--", "--"],
                                ["--", "--", "--", "--", "--", "--", "--", "--"],
-                               ["--", "bQ", "wN", "--", "--", "--", "--", "--"],
-                               ["--", "--", "--", "bR", "bR", "bN", "--", "--"],
-                               ["wP", "wP", "wP", "wP", "wP", "wP", "--", "bR"],
+                               ["--", "bQ", "wN", "--", "--", "--", "--", "bB"],
+                               ["--", "--", "--", "bR", "bR", "--", "--", "--"],
+                               ["wP", "wP", "wP", "wP", "wP", "bP", "--", "bR"],
                                ["wR", "--", "--", "wR", "wK", "wR", "bQ", "--"]])
         # ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
         # ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"]
@@ -186,6 +186,11 @@ class ChessGame:
             kx, ky = convert_n(xy[1]), convert_s(xy[0])
         else:
             kx, ky = x, y
+        pawn = "bP" if is_white else "wP"
+        if in_bounds(kx + attack_inc, ky+1) and self.board[kx + attack_inc][ky+1] == pawn:
+            ans.append((kx + attack_inc, ky+1,0))
+        if in_bounds(kx + attack_inc, ky -1)and self.board[kx + attack_inc][ky-1] == pawn:
+            ans.append((kx + attack_inc, ky - 1, 0))
         opp = "bN" if is_white else "wN"
         for move in knight_move:
             if in_bounds(kx + move[0], ky + move[1]) and self.board[kx + move[0]][ky + move[1]] == opp:
@@ -265,9 +270,9 @@ class ChessGame:
                 self.covered_help(x, y, 0, -1, rook, queen) + self.covered_help(x, y, 0, 1, rook, queen))
         ans += (self.covered_help(x, y, -1, -1, bishop, queen) + self.covered_help(x, y, 1, -1, bishop, queen) +
                 self.covered_help(x, y, -1, 1, bishop, queen) + self.covered_help(x, y, 1, 1, bishop, queen))
-        if self.board[x+inc][y+1] == pawn and not self.pinned(revert(x+inc, y+1)):
+        if in_bounds(x+inc, y+1) and self.board[x+inc][y+1] == pawn and not self.pinned(revert(x+inc, y+1)):
             ans.append(revert(x+inc, y+1))
-        if self.board[x+inc][y-1] == pawn and not self.pinned(revert(x+inc, y-1)):
+        if in_bounds(x+inc, y-1) and self.board[x+inc][y-1] == pawn and not self.pinned(revert(x+inc, y-1)):
             ans.append(revert(x+inc, y-1))
         return ans
 
