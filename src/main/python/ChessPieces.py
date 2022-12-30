@@ -67,7 +67,7 @@ def rook_help(coords, game, x_inc, y_inc, is_white):
 def check_queen(move, game, pinned):
     if pinned(move[0:5]):
         return False
-    return check_bishop(move, game) or check_rook(move, game)
+    return check_bishop(move, game, pinned) or check_rook(move, game, pinned)
 
 
 def check_king(move, game, rooks, covered, pinned):

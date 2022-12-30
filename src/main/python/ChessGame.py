@@ -421,11 +421,12 @@ class ChessGame:
 
 c = ChessGame()
 ai = ChessAi(c)
-c.move("wPe2e4")
-ai.move_turn()
-c.move("wPd2d4")
-ai.move_turn()
-c.print_board()
+while True:
+    c.print_board()
+    move = input("Enter move:")
+    c.move(move)
+    ai.move_turn()
+
 # c.move("bPe7e5")
 # c.move("wKe1g1")
 # c.move("bKe8g8")
