@@ -45,7 +45,7 @@ class ChessGame:
                                         {"b8", "g8"}, {"d8"}, {"a8", "h8"}, {"c8", "f8"}])
         self.white_material = np.array([{"a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2"}, {"e1"}, {"b1", "g1"}, {"d1"},
                                         {"a1", "h1"}, {"c1", "f1"}])
-        self.taken_material = np.array([])
+        self.taken_material = []
 
     def recalculate(self):
         self.black_material = np.array([set([]), set([]), set([]), set([]), set([]), set([]), set([]), set([])])
@@ -94,7 +94,7 @@ class ChessGame:
             if move[1] == "P" and (move[3] == "7" or move[3] == "2"): #Pawn has moved
                 row = 0 if move[0] == "w" else 1
                 self.movedPawns[row][coords[1]] = True
-            if move[1] == "P" and not move[2] == move[4]: #En Passant
+            if move[1] == "P" and not move[2] == move[4] and len(move) == 7 and move[6] == "e": #En Passant
                 inc = 1 if move[0] == "w" else -1
                 self.board[coords[2]+inc][coords[3]] = "--"
                 st = move[4] + str(int(move[5]) + inc)
@@ -130,16 +130,23 @@ class ChessGame:
             taken = self.taken_material
         length = len(moves)
         self.turn = "w" if self.turn == "b" else "b"
-        if length != 0: # How to undo check for pawn, king, rook already moved?
+        if length != 0:  # How to undo check for pawn, king, rook already moved?
             move = moves[length - 1]
-            moves.pop(length-1)
+            moves.pop(length - 1)
             strlen = len(move)
             x2, y2 = convert_n(move[5]), convert_s(move[4])
             x1, y1 = convert_n(move[3]), convert_s(move[2])
             piece = self.board[x2][y2]
             arr = self.black_material if piece[0] == "b" else self.white_material
-            arr[ChessGame.IND[piece[1]]].remove(move[4:6])
+            if move[4:6] in arr[ChessGame.IND[piece[1]]]:
+                arr[ChessGame.IND[piece[1]]].remove(move[4:6])
             arr[ChessGame.IND[piece[1]]].add(move[2:4])
+            if piece[1] == "P":
+                row = "7" if piece[0] == "b" else "2"
+                if move[3] == row:
+                    index = convert_s(move[2])
+                    pawns = self.movedPawns[0] if move[0] == "w" else self.movedPawns[1]
+                    pawns[index] = False
             if strlen == 6:
                 board[x2][y2] = "--"
                 board[x1][y1] = move[0:2]
@@ -154,7 +161,7 @@ class ChessGame:
                 pieced = ("w" if move[0] == "b" else "b") + "P"
                 inc = -1 if move[0] == "b" else 1
                 taken.pop(len(taken) - 1)
-                board[x2+inc][y2] = pieced
+                board[x2 + inc][y2] = pieced
                 arr1 = self.black_material if pieced[0] == "b" else self.white_material
                 arr1[ChessGame.IND[pieced[1]]].add(revert(x2 + inc, y2))
                 board[x1][y1] = move[0:2]
@@ -416,6 +423,8 @@ c = ChessGame()
 ai = ChessAi(c)
 c.move("wPe2e4")
 ai.move_turn()
+c.move("wPd2d4")
+ai.move_turn()
 c.print_board()
 # c.move("bPe7e5")
 # c.move("wKe1g1")
@@ -424,3 +433,4 @@ c.print_board()
 # c.move("bPf7f5")
 # c.print_board()
 # c.print_moves()
+

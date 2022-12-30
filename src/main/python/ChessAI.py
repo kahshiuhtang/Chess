@@ -57,4 +57,3 @@ class ChessAi:
         for i in arr[5]:
             score += ChessAi.MATERIAL["B"]
         return score
-
