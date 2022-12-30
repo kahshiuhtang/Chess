@@ -90,7 +90,7 @@ def check_castle(coords, game, is_white, rooks):
     row = 0 if is_white == "b" else 2
     squaresToCheck = 3 if coords[3] - coords[1] < 0 else 2
     inc = -1 if squaresToCheck == 3 else 1
-    for i in range(squaresToCheck):
+    for i in range(squaresToCheck+1):
         coords[1] += inc
         if not game[coords[0]][coords[1]] == "--":
             return False
@@ -180,7 +180,7 @@ def valid_king(coords, board, moved, covered):
         x1 = x + i
         for j in range(-1, 2):
             y1 = y + j
-            if in_bounds(x1,y1) and board[x1][y1][0] != is_white and len(covered(x1, y1, opp)) == 0: #CHANGE SO YOU CANT MOVE INTO COVRED SQUARE
+            if in_bounds(x1,y1) and board[x1][y1][0] != is_white and len(covered(x1, y1, opp)) == 0:
                 ans.append((x, y, x1, y1))
     orig = 7 if is_white == "w" else 0
     ind = 4 if is_white == "w" else 5

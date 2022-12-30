@@ -1,5 +1,6 @@
 from ChessPieces import check_bishop, check_rook, check_knight, check_queen, check_king, check_pawn, convert, convert_n, \
     convert_s, in_bounds, axis, revert, valid_king, valid_pawn, valid_queen, valid_bishop, valid_rook, valid_knight
+from ChessAI import ChessAi
 import numpy as np
 
 
@@ -25,14 +26,14 @@ class ChessGame:
     IND = {"P": 0, "K": 1, "N": 2, "Q": 3, "R": 4, "B": 5}
 
     def __init__(self):
-        self.board = np.array([["bR", "bN", "bB", "bQ", "bK", "--", "wR", "--"],
+        self.board = np.array([["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"],
                                ["bP", "bP", "bP", "bP", "bP", "bP", "bP", "bP"],
-                               ["--", "--", "--", "--", "bN", "--", "--", "--"],
                                ["--", "--", "--", "--", "--", "--", "--", "--"],
-                               ["--", "bQ", "wN", "--", "--", "--", "--", "bB"],
-                               ["--", "--", "--", "bR", "bR", "--", "--", "--"],
-                               ["wP", "wP", "wP", "wP", "wP", "bP", "--", "bR"],
-                               ["wR", "--", "--", "wR", "wK", "wR", "--", "--"]])
+                               ["--", "--", "--", "--", "--", "--", "--", "--"],
+                               ["--", "--", "--", "--", "--", "--", "--", "--"],
+                               ["--", "--", "--", "--", "--", "--", "--", "--"],
+                               ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"],
+                               ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]])
         # ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
         # ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"]
         self.moved = [False, False, False, False, False, False] #uL -> uR -> bL -> bR -> wK -> bK of rooks
@@ -122,24 +123,40 @@ class ChessGame:
             return True
         return False
 
-    def unmove(self, moves, board, taken):
+    def unmove(self, moves=None, board=None, taken=None):
+        if moves is None and board is None and taken is None:
+            moves = self.moves
+            board = self.board
+            taken = self.taken_material
         length = len(moves)
-        if length != 0:
+        self.turn = "w" if self.turn == "b" else "b"
+        if length != 0: # How to undo check for pawn, king, rook already moved?
             move = moves[length - 1]
+            moves.pop(length-1)
             strlen = len(move)
-            x2, y2 = convert_n(moves[5]), convert_s(moves[4])
-            x1, y1 = convert_n(moves[3]), convert_s(moves[2])
+            x2, y2 = convert_n(move[5]), convert_s(move[4])
+            x1, y1 = convert_n(move[3]), convert_s(move[2])
+            piece = self.board[x2][y2]
+            arr = self.black_material if piece[0] == "b" else self.white_material
+            arr[ChessGame.IND[piece[1]]].remove(move[4:6])
+            arr[ChessGame.IND[piece[1]]].add(move[2:4])
             if strlen == 6:
                 board[x2][y2] = "--"
                 board[x1][y1] = move[0:2]
             elif move[6] == "x":
-                piece = taken[len(taken) - 1]
-                board[x2][y2] = piece
+                pieced = taken[len(taken) - 1]
+                taken.pop(len(taken) - 1)
+                arr1 = self.black_material if pieced[0] == "b" else self.white_material
+                arr1[ChessGame.IND[pieced[1]]].add(move[4:6])
+                board[x2][y2] = pieced
                 board[x1][y1] = move[0:2]
             else:
-                piece = ("w" if move[0] == "b" else "b") + "P"
+                pieced = ("w" if move[0] == "b" else "b") + "P"
                 inc = -1 if move[0] == "b" else 1
-                board[x2+inc][y2] = piece
+                taken.pop(len(taken) - 1)
+                board[x2+inc][y2] = pieced
+                arr1 = self.black_material if pieced[0] == "b" else self.white_material
+                arr1[ChessGame.IND[pieced[1]]].add(revert(x2 + inc, y2))
                 board[x1][y1] = move[0:2]
             return True
         return False
@@ -153,9 +170,10 @@ class ChessGame:
             ans += "x"
         return ans
 
-    def generate_valid_moveset(self, iswhite):
+    def generate_valid_moveset(self):
+        iswhite = (self.turn == "w")
         pieces = self.white_material if iswhite else self.black_material
-        col = "w" if iswhite else "b"
+        col = self.turn
         ans = []
         piece_type = col + "P"
         for square in pieces[0]:
@@ -187,10 +205,10 @@ class ChessGame:
         arr[ind].add(move[4:6])
         if len(move) == 7 and move[6] == "x":
             arr = self.black_material if move[0] == "w" else self.white_material
-            c = [convert_s(move[5]), convert_n(move[4])]
-            p = board[c[0]][c[1]][1]
+            c = [convert_n(move[5]), convert_s(move[4])]
+            p = str(self.board[c[0]][c[1]][1])
             s = ("w" if move[0] == "b" else "b") + str(p)
-            arr[p].remove(move[4:6])
+            arr[ChessGame.IND[p]].remove(move[4:6])
             self.taken_material.append(s)
 
     def print_board(self):
@@ -395,9 +413,10 @@ class ChessGame:
 # Need methods: Find possible moves for side, Handles Promotion
 
 c = ChessGame()
-c.recalculate()
-print(c.generate_valid_moveset(c.turn))
-# c.move("wRh1g1")
+ai = ChessAi(c)
+c.move("wPe2e4")
+ai.move_turn()
+c.print_board()
 # c.move("bPe7e5")
 # c.move("wKe1g1")
 # c.move("bKe8g8")
