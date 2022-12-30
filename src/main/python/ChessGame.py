@@ -1,5 +1,5 @@
 from ChessPieces import check_bishop, check_rook, check_knight, check_queen, check_king, check_pawn, convert, convert_n, \
-    convert_s, in_bounds, axis, revert
+    convert_s, in_bounds, axis, revert, valid_king, valid_pawn, valid_queen, valid_bishop, valid_rook, valid_knight
 import numpy as np
 
 
@@ -45,6 +45,19 @@ class ChessGame:
         self.white_material = np.array([{"a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2"}, {"e1"}, {"b1", "g1"}, {"d1"},
                                         {"a1", "h1"}, {"c1", "f1"}])
         self.taken_material = np.array([])
+
+    def recalculate(self):
+        self.black_material = np.array([set([]), set([]), set([]), set([]), set([]), set([]), set([]), set([])])
+        self.white_material = np.array([set([]), set([]), set([]), set([]), set([]), set([]), set([]), set([])])
+        for i in range(8):
+            for j in range(8):
+                if not self.board[i][j] == "--":
+                    arr = self.black_material if self.board[i][j][0] == "b" else self.white_material
+                    ind = ChessGame.IND[self.board[i][j][1]]
+                    addr = revert(i, j)
+                    arr[ind].add(addr)
+        print(self.black_material)
+        print(self.white_material)
 
     def move_piece(self, move):
         if not validate_move(move):
@@ -133,7 +146,7 @@ class ChessGame:
 
     def convert_to_move(self, x1, y1, x2, y2):
         ans = self.board[x1][y1]
-        ans += str(convert_s(y1)) + str(convert_n(x1)) + str(convert_s(y2)) + str(convert_n(x2))
+        ans += revert(x1, y1) + revert(x2, y2)
         if self.board[x1][y1][1] == "P" and y2 - y1 != 0 and self.board[x2][y2] == "--":
             ans += "e"
         elif not self.board[x2][y2] == "--":
@@ -142,6 +155,30 @@ class ChessGame:
 
     def generate_valid_moveset(self, iswhite):
         pieces = self.white_material if iswhite else self.black_material
+        col = "w" if iswhite else "b"
+        ans = []
+        piece_type = col + "P"
+        for square in pieces[0]:
+            ans += self.possible_moves(piece_type+square)
+        piece_type = col + "K"
+        for square in pieces[1]:
+            ans += self.possible_moves(piece_type + square)
+        piece_type = col + "N"
+        for square in pieces[2]:
+            ans += self.possible_moves(piece_type + square)
+        piece_type = col + "Q"
+        for square in pieces[3]:
+            ans += self.possible_moves(piece_type + square)
+        piece_type = col + "R"
+        for square in pieces[4]:
+            ans += self.possible_moves(piece_type + square)
+        piece_type = col + "B"
+        for square in pieces[5]:
+            ans += self.possible_moves(piece_type + square)
+        ans1 = []
+        for move in ans:
+            ans1.append(self.convert_to_move(move[0], move[1], move[2], move[3]))
+        return ans1
 
     def handle_set(self, move):
         arr = self.black_material if move[0] == "b" else self.white_material
@@ -204,7 +241,6 @@ class ChessGame:
         piece = opp + "B"
         if axis(self.board, kx, ky, 1, 1, piece, opp) or axis(self.board, kx, ky, -1, -1, piece, opp) or axis(self.board, kx, ky, -1, 1, piece, opp) or axis(self.board, kx, ky, 1, -1, piece, opp):
             return True
-        # Check Left Pawn
         piece = opp + "P"
         if self.board[kx+attack_inc][ky+1] == piece or self.board[kx+attack_inc][ky-1] == piece:
             return True
@@ -359,8 +395,8 @@ class ChessGame:
 # Need methods: Find possible moves for side, Handles Promotion
 
 c = ChessGame()
-print(c.checkmate("bKe8"))
-c.print_board()
+c.recalculate()
+print(c.generate_valid_moveset(c.turn))
 # c.move("wRh1g1")
 # c.move("bPe7e5")
 # c.move("wKe1g1")

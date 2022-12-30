@@ -162,7 +162,7 @@ def valid_knight(coords, board, pinned):
         x = xy[0] + move[0]
         y = xy[1] + move[1]
         if in_bounds(x, y) and board[x][y][0] != is_white:
-            ans.append((x, y))
+            ans.append((xy[0], xy[1], x, y))
     return ans
 
 
@@ -170,26 +170,27 @@ def in_bounds(x, y):
     return 8 > x >= 0 and 8 > y >= 0
 
 
-def valid_king(coords, board, moved):
+def valid_king(coords, board, moved, covered):
     ans = []
     x = convert_n(coords[3])
     y = convert_s(coords[2])
     is_white = coords[0]
+    opp = "b" if is_white == "w" else "w"
     for i in range(-1, 2):
         x1 = x + i
         for j in range(-1, 2):
             y1 = y + j
-            if in_bounds(x1,y1) and board[x1][y1][0] != is_white:
-                ans.append((x1, y1))
+            if in_bounds(x1,y1) and board[x1][y1][0] != is_white and len(covered(x1, y1, opp)) == 0: #CHANGE SO YOU CANT MOVE INTO COVRED SQUARE
+                ans.append((x, y, x1, y1))
     orig = 7 if is_white == "w" else 0
     ind = 4 if is_white == "w" else 5
     ind1 = 2 if is_white == "w" else 0
     c = coords + "g" + str(8-orig)
     if not moved[ind] and board[orig][0][1] == "R" and not moved[ind1] and check_castle(convert(c), board, is_white, moved):
-        ans.append((orig, 2))
+        ans.append((x, y, orig, 2))
     c = coords + "c" + str(8 - orig)
     if not moved[ind] and board[orig][7][1] == "R" and not moved[ind1+1] and check_castle(convert(c), board, is_white, moved):
-        ans.append((orig, 6))
+        ans.append((x, y, orig, 6))
     return ans
 
 
@@ -206,9 +207,9 @@ def check_direction(xy, is_white, board, x_inc, y_inc):
         if (not temp == "--") and (temp[0] == is_white):
             return ans
         if (not temp == "--") and (temp[0] != is_white):
-            ans.append((x, y))
+            ans.append((xy[0], xy[1], x, y))
             return ans
-        ans.append((x, y))
+        ans.append((xy[0], xy[1], x, y))
 
 
 def valid_pawn(coords, board, moves, movedPawns, pinned):
@@ -222,13 +223,13 @@ def valid_pawn(coords, board, moves, movedPawns, pinned):
     x = convert_n(coords[3])
     y = convert_s(coords[2])
     if board[x+inc][y] == "--":
-        ans.append((x+inc, y))
+        ans.append((x, y, x+inc, y))
     if first == x and not movedPawns[ind][y] and board[x+inc*2][y] == "--" and board[x+inc][y] == "--":
-        ans.append((x+inc*2, y))
+        ans.append((x, y, x+inc*2, y))
     if in_bounds(x + inc, y - 1) and not board[x + inc][y-1] == "--" and not board[x + inc][y - 1][0] == is_white:
-        ans.append((x + inc, y - 1))
+        ans.append((x, y, x + inc, y - 1))
     if in_bounds(x + inc, y + 1) and not board[x + inc][y+1] == "--" and not board[x + inc][y + 1][0] == is_white:
-        ans.append((x + inc, y + 1))
+        ans.append((x, y, x + inc, y + 1))
     if len(moves) == 0:
         return ans
     prev = moves[len(moves)-1]
@@ -236,7 +237,7 @@ def valid_pawn(coords, board, moves, movedPawns, pinned):
     y1 = convert_s(prev[4])
     if board[x1][y1][1] == "P" and not board[x1][y1][0] == is_white and x1 == x and abs(y1-y) == 1 and \
             board[x1+inc][y1] == "--":
-        ans.append((x+inc, y1))
+        ans.append((x, y, x+inc, y1))
     return ans
 
 
