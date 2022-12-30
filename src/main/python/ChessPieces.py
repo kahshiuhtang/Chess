@@ -215,7 +215,7 @@ def check_direction(xy, is_white, board, x_inc, y_inc):
 def valid_pawn(coords, board, moves, movedPawns, pinned):
     ans = []
     if pinned(coords[0:5]):
-        return []
+        return ans
     is_white = coords[0]
     first = 6 if is_white == "w" else 1
     inc = -1 if is_white == "w" else 1
@@ -233,9 +233,11 @@ def valid_pawn(coords, board, moves, movedPawns, pinned):
     if len(moves) == 0:
         return ans
     prev = moves[len(moves)-1]
+    startx = convert_n(prev[3])
+    row = 1 if prev[0] == "b" else 6
     x1 = convert_n(prev[5])
     y1 = convert_s(prev[4])
-    if board[x1][y1][1] == "P" and not board[x1][y1][0] == is_white and x1 == x and abs(y1-y) == 1 and \
+    if board[x1][y1][1] == "P" and startx == row and not board[x1][y1][0] == is_white and x1 == x and abs(y1-y) == 1 and \
             board[x1+inc][y1] == "--":
         ans.append((x, y, x+inc, y1))
     return ans
