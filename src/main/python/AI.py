@@ -1,71 +1,83 @@
 import chess, random
 import numpy as np
 
-CHECKMATE = 10000
+CHECKMATE = 100
 next_move = None
-
+count = 0
 
 def convert(location):
+    """
+    :param location: string, length 2, a corodinate on the chess board
+    :return: list, length 2, first index is the x coordinate of the chess board and second index os y coordinate
+    """
     y = ord(location[0]) - 97
     x = 8 - int(location[1])
     return [x, y]
 
 
 class AI:
-    MATERIAL = {"P": 10.0, "R": 50.0, "Q": 100.0, "K": 10000, "N": 27.5, "B": 30.0}
-    piece_score = {"K": 0, "Q": 9, "R": 5, "B": 3, "N": 3, "p": 1}
+    """
+    Chess AI that uses minmax algorithm to calculate next move
+    Positional scores of pieces are stored in following 2D arrays
+    """
+    knight_scores = [[0.00, 0.05, 0.10, 0.15, 0.15, 0.10, 0.05, 0.00],
+                     [0.15, 0.20, 0.20, 0.25, 0.25, 0.20, 0.20, 0.15],
+                     [0.20, 0.35, 0.45, 0.45, 0.45, 0.45, 0.35, 0.20],
+                     [0.20, 0.25, 0.45, 0.55, 0.55, 0.45, 0.25, 0.20],
+                     [0.15, 0.20, 0.45, 0.50, 0.50, 0.45, 0.20, 0.15],
+                     [0.10, 0.20, 0.30, 0.35, 0.35, 0.30, 0.30, 0.10],
+                     [0.10, 0.10, 0.20, 0.25, 0.25, 0.20, 0.10, 0.10],
+                     [0.00, 0.10, 0.15, 0.20, 0.20, 0.15, 0.10, 0.00]]
 
-    knight_scores = [[0.0, 0.1, 0.2, 0.2, 0.2, 0.2, 0.1, 0.0],
-                     [0.1, 0.3, 0.5, 0.5, 0.5, 0.5, 0.3, 0.1],
-                     [0.2, 0.5, 0.6, 0.65, 0.65, 0.6, 0.5, 0.2],
-                     [0.2, 0.55, 0.65, 0.7, 0.7, 0.65, 0.55, 0.2],
-                     [0.2, 0.5, 0.65, 0.7, 0.7, 0.65, 0.5, 0.2],
-                     [0.2, 0.55, 0.6, 0.65, 0.65, 0.6, 0.55, 0.2],
-                     [0.1, 0.3, 0.5, 0.55, 0.55, 0.5, 0.3, 0.1],
-                     [0.0, 0.1, 0.2, 0.2, 0.2, 0.2, 0.1, 0.0]]
+    bishop_scores = [[0.00, 0.10, 0.20, 0.30, 0.30, 0.20, 0.10, 0.00],
+                     [0.00, 0.15, 0.25, 0.35, 0.35, 0.25, 0.15, 0.00],
+                     [0.10, 0.25, 0.35, 0.45, 0.45, 0.35, 0.25, 0.10],
+                     [0.10, 0.25, 0.35, 0.65, 0.65, 0.35, 0.25, 0.10],
+                     [0.15, 0.30, 0.40, 0.75, 0.75, 0.40, 0.30, 0.15],
+                     [0.25, 0.30, 0.40, 0.65, 0.65, 0.40, 0.30, 0.25],
+                     [0.40, 0.60, 0.50, 0.50, 0.50, 0.50, 0.60, 0.40],
+                     [0.50, 0.35, 0.25, 0.30, 0.30, 0.25, 0.35, 0.60]]
 
-    bishop_scores = [[0.0, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.0],
-                     [0.0, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.0],
-                     [0.0, 0.4, 0.5, 0.6, 0.6, 0.5, 0.4, 0.0],
-                     [0.2, 0.5, 0.5, 0.8, 0.8, 0.5, 0.5, 0.2],
-                     [0.2, 0.4, 0.6, 0.9, 0.9, 0.6, 0.4, 0.2],
-                     [0.1, 0.4, 0.6, 0.6, 0.6, 0.6, 0.4, 0.2],
-                     [0.1, 0.5, 0.4, 0.4, 0.4, 0.4, 0.5, 0.2],
-                     [0.0, 0.1, 0.2, 0.3, 0.3, 0.2, 0.1, 0.0]]
+    rook_scores = [[0.70, 0.95, 1.05, 1.25, 1.25, 1.05, 0.95, 0.70],
+                   [0.55, 0.65, 0.75, 0.85, 0.85, 0.75, 0.65, 0.55],
+                   [0.35, 0.45, 0.55, 0.65, 0.65, 0.55, 0.45, 0.35],
+                   [0.30, 0.40, 0.45, 0.55, 0.55, 0.45, 0.40, 0.30],
+                   [0.25, 0.35, 0.45, 0.60, 0.60, 0.45, 0.35, 0.25],
+                   [0.20, 0.30, 0.35, 0.55, 0.55, 0.35, 0.30, 0.20],
+                   [0.10, 0.15, 0.20, 0.50, 0.50, 0.25, 0.25, 0.10],
+                   [0.15, 0.25, 0.35, 0.45, 0.45, 0.35, 0.25, 0.15]]
 
-    rook_scores = [[0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25],
-                   [0.5, 0.75, 0.75, 0.75, 0.75, 0.75, 0.75, 0.5],
-                   [0.0, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.0],
-                   [0.0, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.0],
-                   [0.0, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.0],
-                   [0.0, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.0],
-                   [0.0, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.0],
-                   [0.25, 0.25, 0.25, 0.5, 0.5, 0.25, 0.25, 0.25]]
+    queen_scores = [[1.0, 1.2, 1.3, 1.4, 1.4, 1.3, 1.2, 1.0],
+                    [0.65, 0.75, 0.85, 0.95, 0.95, 0.85, 0.75, 0.65],
+                    [0.80, 0.90, 1.00, 1.25, 1.25, 1.00, 0.90, 0.80],
+                    [0.70, 0.90, 1.00, 1.50, 1.50, 1.00, 0.90, 0.70],
+                    [0.65, 0.75, 0.85, 1.00, 1.00, 0.85, 0.75, 0.65],
+                    [0.20, 0.30, 0.50, 0.75, 0.75, 0.50, 0.40, 0.20],
+                    [0.10, 0.30, 0.35, 0.50, 0.50, 0.35, 0.30, 0.10],
+                    [0.00, 0.20, 0.20, 0.30, 0.30, 0.20, 0.20, 0.00]]
 
-    queen_scores = [[0.0, 0.2, 0.2, 0.3, 0.3, 0.2, 0.2, 0.0],
-                    [0.2, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.2],
-                    [0.2, 0.4, 0.5, 0.5, 0.5, 0.5, 0.4, 0.2],
-                    [0.3, 0.4, 0.5, 0.5, 0.5, 0.5, 0.4, 0.3],
-                    [0.4, 0.4, 0.5, 0.5, 0.5, 0.5, 0.4, 0.3],
-                    [0.2, 0.5, 0.5, 0.5, 0.5, 0.5, 0.4, 0.2],
-                    [0.2, 0.4, 0.5, 0.4, 0.4, 0.4, 0.4, 0.2],
-                    [0.0, 0.2, 0.2, 0.3, 0.3, 0.2, 0.2, 0.0]]
-
-    pawn_scores = [[0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8],
-                   [0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7],
-                   [0.3, 0.3, 0.4, 0.5, 0.5, 0.4, 0.3, 0.3],
-                   [0.25, 0.25, 0.3, 0.45, 0.45, 0.3, 0.25, 0.25],
-                   [0.2, 0.2, 0.2, 0.4, 0.4, 0.2, 0.2, 0.2],
-                   [0.25, 0.15, 0.1, 0.2, 0.2, 0.1, 0.15, 0.25],
-                   [0.25, 0.3, 0.3, 0.0, 0.0, 0.3, 0.3, 0.25],
-                   [0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2]]
+    pawn_scores = [[1.00, 1.20, 1.40, 1.50, 1.50, 1.40, 1.20, 1.00],
+                   [0.70, 0.75, 0.85, 0.95, 0.95, 0.85, 0.75, 0.70],
+                   [0.50, 0.60, 0.65, 0.75, 0.75, 0.65, 0.60, 0.50],
+                   [0.35, 0.45, 0.55, 0.65, 0.65, 0.55, 0.45, 0.35],
+                   [0.25, 0.45, 0.45, 0.50, 0.50, 0.45, 0.45, 0.25],
+                   [0.10, 0.20, 0.25, 0.30, 0.30, 0.25, 0.20, 0.10],
+                   [0.05, 0.10, 0.15, 0.20, 0.20, 0.15, 0.10, 0.05],
+                   [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00]]
 
     def __init__(self, game):
         self.game = game
 
     def move(self):
+        """
+        Calls the minmax algorithm
+        Will have the best move stored in a global variable called next_move
+        :return: void
+        """
         moves = self.generate_moves()
-        depth = 2
+        depth = 3
+        global count
+        count = 0
         self.minmax(moves, depth, depth, -CHECKMATE, CHECKMATE, 1 if self.game.turn else -1)
         global next_move
         self.game.push(next_move)
@@ -107,6 +119,8 @@ class AI:
         Converts a generator into a list for sorting
         :return: list, list of moves that are valid
         """
+        global count
+        count = count + 1
         moves = self.game.legal_moves
         temp = []
         for move in moves:
@@ -115,31 +129,20 @@ class AI:
         return temp
 
     def evaluate(self):
-        return self.evaluate_material() + self.evaluate_position()
+        """
+        Evaluates the score of this position
+        Score > 0 is better for white and score < 0 is better for black
+        :return: float, score of this position
+        """
+        return self.evaluate_material_and_positioning()
 
-    def evaluate_material(self):
+    def evaluate_material_and_positioning(self):
         score = 0.0
-        for letter in range(97, 105):
-            for num in range(1, 9):
-                square = str(chr(int(letter))) + str(num)
-                piece = board.piece_at(chess.parse_square(square))
-                if piece is not None:
-                    color = board.color_at(chess.parse_square(square))
-                    mult = 1 if color else -1
-                    if piece.piece_type == 1:
-                        score += mult*1.0
-                    elif piece.piece_type == 4:
-                        score += mult*5.0
-                    elif piece.piece_type == 3:
-                        score += mult*3.0
-                    elif piece.piece_type == 2:
-                        score += mult*2.75
-                    elif piece.piece_type == 5:
-                        score += mult*10.00
-        return score
-
-    def evaluate_position(self):
-        score = 0.0
+        if self.game.is_checkmate():
+            mult = 1 if self.game.turn else -1
+            return mult*CHECKMATE
+        if self.game.is_stalemate():
+            return score
         for letter in range(97, 105):
             for num in range(1, 9):
                 square = str(chr(int(letter))) + str(num)
@@ -149,23 +152,40 @@ class AI:
                     mult = 1 if color else -1
                     xy = convert(square)
                     if piece.piece_type == 1:
-                        score += mult*self.pawn_scores[xy[0]][xy[1]]
+                        score += mult*1.0
+                        score += mult * self.pawn_scores[::mult][xy[0]][xy[1]]
                     elif piece.piece_type == 4:
-                        score += mult*self.rook_scores[xy[0]][xy[1]]
+                        score += mult*5.0
+                        score += mult * self.rook_scores[::mult][xy[0]][xy[1]]
                     elif piece.piece_type == 3:
-                        score += mult*self.bishop_scores[xy[0]][xy[1]]
+                        score += mult*3.0
+                        score += mult * self.bishop_scores[::mult][xy[0]][xy[1]]
                     elif piece.piece_type == 2:
-                        score += mult*self.knight_scores[xy[0]][xy[1]]
+                        score += mult*2.75
+                        score += mult * self.knight_scores[::mult][xy[0]][xy[1]]
                     elif piece.piece_type == 5:
-                        score += mult*self.queen_scores[xy[0]][xy[1]]
+                        score += mult*10.00
+                        score += mult * self.queen_scores[::mult][xy[0]][xy[1]]
         return score
+
 
 board = chess.Board()
 ai = AI(board)
+sum = 0.0
+for i in range(25):
+    board = chess.Board()
+    ai = AI(board)
+    board.push(chess.Move.from_uci("e2e4"))
+    ai.move()
+    sum += count
+print(sum/25)
 
 while True:
     print(board)
+    print(count)
     move = input("What is your move: ")
+    if move == "quit":
+        break
     board.push(chess.Move.from_uci(move))
     ai.move()
 
