@@ -3,7 +3,7 @@
 ## Java
 #### Contents
 * Representation of a chess game
-* GUI that allows two use or one to play chess
+* GUI that allows two or one users to play chess
 
 ## Python
 #### Contents
