@@ -6,8 +6,13 @@ CHECKMATE = 100000
 
 
 class ChessAi:
+    """
+    ChessAi: Generates best move from a game state
+
+    Material: Hash Map, each piece and its value
+    PIECE_POS: Positional values for each piece excluding king
+    """
     MATERIAL = {"P": 10.0, "R": 50.0, "Q": 100.0, "K": 10000, "N": 27.5, "B": 30.0}
-    DEPTH = 2
     KNIGHT_POS = np.array([[1, 3, 5, 5, 5, 5, 3, 1],
                            [1, 3.5, 4, 5, 5, 4, 3.5, 1],
                            [1, 3, 8, 7, 7, 8, 3, 1],
@@ -54,12 +59,24 @@ class ChessAi:
                          [0, 0, 0, 15, 15, 0, 0, 0]])
 
     def __init__(self, chess_game):
+        """
+        Arguments:
+             chess_game: A Chess Game instance from ChessGame class
+        """
         self.chess_game = chess_game
 
     def move_turn(self):
+        """
+        Helper Method to find best move
+        Stores the move in a global variable called next_move
+
+        Arguments: None
+
+        Returns: void
+        """
         moves = self.chess_game.generate_valid_moveset()
         random.shuffle(moves)
-        self.find_move(moves, 3, 3, -CHECKMATE, CHECKMATE, 1 if self.chess_game.turn == "w" else -1)
+        self.find_move(moves, 2, 2, -CHECKMATE, CHECKMATE, 1 if self.chess_game.turn == "w" else -1)
         global next_move
         if next_move is None:
             return
@@ -67,6 +84,21 @@ class ChessAi:
         self.chess_game.move(next_move)
 
     def find_move(self, valid_moves, depth, DEPTH,  alpha, beta, tm):
+        """
+        Main AI method
+        Recursively finds the best move based on after each possible move up to certain depth
+
+        Arguments:
+            valid_moves: list of valid moves in chess index
+            depth: int, current depth we are at, return when we reach 0
+            DEPTH: max depth we travel, never changes
+            alpha: integer
+            beta: integers that help determine when there is no need to traverse certain
+            tm: what we multiply score by, based on whether it is white or black to move
+
+        Returns:
+                score: integer
+        """
         if depth == 0:
             return tm * self.evaluate()
         # move ordering - implement later //TODO
@@ -91,6 +123,10 @@ class ChessAi:
         return self.evaluate_material()
 
     def evaluate_material(self):
+        """
+        Evaluate material and position of a chessboard
+        Adds white values and subtracts black values
+        """
         global count
         count = count + 1
         arr = self.chess_game.white_material
@@ -148,15 +184,19 @@ class ChessAi:
             score -= ChessAi.BISHOP_POS[ind[0]][ind[1]]
         return score
 
+
 def convert_s(symbol):
+    """ Turn a symbol into a numeric index"""
     return ord(symbol) - 97
 
 
 def convert_n(num):
+    """ Turn a string number into a numeric index"""
     return 8 - int(num)
 
 
 def convert(move):
+    """ Turn a chess coordinate into a numeric index"""
     x1 = int(convert_n(move[1]))
     y1 = int(convert_s(move[0]))
     return [x1, y1]

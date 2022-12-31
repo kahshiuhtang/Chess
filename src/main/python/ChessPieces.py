@@ -2,6 +2,13 @@ import numpy as np
 
 
 def check_bishop(move, game, pinned):
+    """
+    Returns whether this is a valid bishop move
+        :param move: move checked
+        :param game: ChessGame board
+        :param pinned: function - returns whether piece is pinned
+        :return: boolean - whether this is a valid move or not
+    """
     if pinned(move[0:5]):
         return False
     coords = convert(move)
@@ -13,6 +20,15 @@ def check_bishop(move, game, pinned):
 
 
 def bishop_help(coords, game, x_inc, y_inc, is_white):
+    """
+        Helper function for finding if a bishop move is valid
+        :param coords: string, coordinate of where the bishop is moving
+        :param game: ChessGame board
+        :param x_inc: integer, increment to check
+        :param y_inc: integer, increment to check
+        :param is_white: string, w or b, depending on whether piece is white or black
+        :return: boolean, whether move is valid based on an empty axis
+        """
     for i in range(abs(coords[0]-coords[2])-1):
         coords[0] += x_inc
         coords[1] += y_inc
@@ -22,6 +38,15 @@ def bishop_help(coords, game, x_inc, y_inc, is_white):
 
 
 def check_pawn(move, game, moves, pawns, pinned):
+    """
+    Returns whether this is a valid pawn move
+        :param move: move checked
+        :param game: ChessGame board
+        :param moves: list of previous moves
+        :param pawns: 2D list of pawns and whether they have moved or not
+        :param pinned: function - returns whether piece is pinned
+        :return: boolean - whether this is a valid move or not
+        """
     if pinned(move[0:5]):
         return False
     coords = convert(move)
@@ -45,6 +70,13 @@ def check_pawn(move, game, moves, pawns, pinned):
 
 
 def check_rook(move, game, pinned):
+    """
+    Returns whether this is a valid rook move
+        :param move: move checked
+        :param game: ChessGame board
+        :param pinned: function - returns whether piece is pinned
+        :return: boolean - whether this is a valid move or not
+        """
     if pinned(move[0:5]):
         return False
     coords = convert(move)
@@ -56,6 +88,15 @@ def check_rook(move, game, pinned):
 
 
 def rook_help(coords, game, x_inc, y_inc, is_white):
+    """
+    Helper function for finding if a rook move is valid
+    :param coords: string, coordinates of where rook is moving
+    :param game: ChessGame board
+    :param x_inc: integer, increment to check
+    :param y_inc: integer, increment to check
+    :param is_white: string, w or b, depending on whether piece is white or black
+    :return: boolean, whether move is valid based on an empty axis
+    """
     for i in range(max(abs(coords[0]-coords[2]),abs(coords[3]-coords[1]))-1):
         coords[0] += x_inc
         coords[1] += y_inc
@@ -65,12 +106,28 @@ def rook_help(coords, game, x_inc, y_inc, is_white):
 
 
 def check_queen(move, game, pinned):
+    """
+    Returns whether this is a valid queen move
+        :param move: move checked
+        :param game: ChessGame board
+        :param pinned: function - returns whether piece is pinned
+        :return: boolean - whether this is a valid move or not
+        """
     if pinned(move[0:5]):
         return False
     return check_bishop(move, game, pinned) or check_rook(move, game, pinned)
 
 
 def check_king(move, game, rooks, covered, pinned):
+    """
+    Returns whether this is a valid king move
+        :param move: move checked
+        :param game: ChessGame board
+        :param rooks: boolean list of rooks representing whether they have moved
+        :param pinned: function - returns whether piece is pinned
+        :param covered: function - returns whether square is covered by an opposing piece
+        :return: boolean - whether this is a valid move or not
+        """
     if not in_bounds(convert_n(move[5]), convert_s(move[4])):
         return False
     coords = convert(move)
@@ -87,6 +144,14 @@ def check_king(move, game, rooks, covered, pinned):
 
 
 def check_castle(coords, game, is_white, rooks):
+    """
+    Returns whether this is a valid castle move
+        :param coords: string, move of the rook we need to check
+        :param game: ChessGame board
+        :param is_white: string, represents if this is a black or white castle
+        :param rooks: boolean list, represents which rooks have already moved
+        :return: boolean - whether this is a valid move or not
+        """
     row = 0 if is_white == "b" else 2
     squaresToCheck = 3 if coords[3] - coords[1] < 0 else 2
     inc = -1 if squaresToCheck == 3 else 1
@@ -100,6 +165,13 @@ def check_castle(coords, game, is_white, rooks):
 
 
 def check_knight(move, game, pinned):
+    """
+    Returns whether this is a valid knight move
+        :param move: move checked
+        :param game: ChessGame board
+        :param pinned: function - returns whether piece is pinned
+        :return: boolean - whether this is a valid move or not
+        """
     if pinned(move[0:5]):
         return False
     coords = convert(move)
@@ -128,6 +200,12 @@ def convert(move):
 
 
 def valid_rook(coords, board, pinned):
+    """
+        :param coords: string, coordinates of piece we are checking
+        :param board: ChessGame board
+        :param pinned: function - returns whether piece is pinned
+        :return: boolean - whether this is a valid move or not
+        """
     if pinned(coords[0:5]):
         return []
     xy = [convert_n(coords[3]), convert_s(coords[2])]
@@ -137,6 +215,12 @@ def valid_rook(coords, board, pinned):
 
 
 def valid_bishop(coords, board, pinned):
+    """
+            :param coords: string, coordinates of piece we are checking
+            :param board: ChessGame board
+            :param pinned: function - returns whether piece is pinned
+            :return: boolean - whether this is a valid move or not
+            """
     if pinned(coords[0:5]):
         return []
     xy = [convert_n(coords[3]), convert_s(coords[2])]
@@ -146,12 +230,24 @@ def valid_bishop(coords, board, pinned):
 
 
 def valid_queen(coords, board, pinned):
+    """
+            :param coords: string, coordinates of piece we are checking
+            :param board: ChessGame board
+            :param pinned: function - returns whether piece is pinned
+            :return: boolean - whether this is a valid move or not
+            """
     if pinned(coords[0:5]):
         return []
     return valid_bishop(coords, board, pinned) + valid_rook(coords, board, pinned)
 
 
 def valid_knight(coords, board, pinned):
+    """
+            :param coords: string, coordinates of piece we are checking
+            :param board: ChessGame board
+            :param pinned: function - returns whether piece is pinned
+            :return: boolean - whether this is a valid move or not
+            """
     if pinned(coords[0:5]):
         return []
     moves = [[1,2],[2,1],[-1,2],[2,-1],[-1,-2],[-2,-1],[1,-2],[-2,1]]
@@ -167,10 +263,24 @@ def valid_knight(coords, board, pinned):
 
 
 def in_bounds(x, y):
+    """
+    Returns whether array coordinate is in bound
+        :param x: int, first index in array
+        :param y: int, second index in array
+        :return: boolean, whether this is a valid point or not
+    """
     return 8 > x >= 0 and 8 > y >= 0
 
 
 def valid_king(coords, board, moved, covered):
+    """
+        Returns a list of all valid pawn moves
+        :param coords: string, coordinates of what piece we are looking at
+        :param board: ChessGame board
+        :param moved: list, list of kings/rooks that have moved or not
+        :param covered: function, returns whether a square is covered
+        :return: string list, whether list is valid
+        """
     ans = []
     x = convert_n(coords[3])
     y = convert_s(coords[2])
@@ -195,6 +305,15 @@ def valid_king(coords, board, moved, covered):
 
 
 def check_direction(xy, is_white, board, x_inc, y_inc):
+    """
+
+    :param xy:
+    :param is_white:
+    :param board: ChessGame board
+    :param x_inc: int, how much x index increases
+    :param y_inc: int, how much y index increase
+    :return: list of 4-tuple of previous and later array indicies
+    """
     ans = []
     x = xy[0]
     y = xy[1]
@@ -213,6 +332,15 @@ def check_direction(xy, is_white, board, x_inc, y_inc):
 
 
 def valid_pawn(coords, board, moves, movedPawns, pinned):
+    """
+    Returns a list of all valid pawn moves
+    :param coords: string, coordinates of what piece we are looking at
+    :param board: ChessGame board
+    :param moves: list, list of previous moves
+    :param movedPawns: boolean list, list of whether pawns have been moved
+    :param pinned: function, returns whether piece is pinned
+    :return: string list, whether list is valid
+    """
     ans = []
     if pinned(coords[0:5]):
         return ans
@@ -244,6 +372,17 @@ def valid_pawn(coords, board, moves, movedPawns, pinned):
 
 
 def axis(board, x, y,  x_inc, y_inc, piece, color):
+    """
+
+    :param board: ChessGame board
+    :param x: integer, index for board
+    :param y: integer, second index for board
+    :param x_inc: integer, increase of first index
+    :param y_inc: integer, increase of second index
+    :param piece: string,
+    :param color: string, what color piece we are looking for
+    :return: boolean, whether a certain piece is found on an axis
+    """
     queen = color + "Q"
     king = ("w" if color == "b" else "b") + "K"
     for i in range(7):
@@ -259,6 +398,12 @@ def axis(board, x, y,  x_inc, y_inc, piece, color):
 
 
 def revert(x, y):
+    """
+    Turns a
+    :param x:
+    :param y:
+    :return:
+    """
     fir = chr(ord('a') + y)
     sec = 8 - int(x)
     return str(fir) + str(sec)

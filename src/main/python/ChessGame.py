@@ -5,6 +5,11 @@ import numpy as np
 
 
 def validate_move(move):
+    """
+    Checks whether a move is valid or not
+    :param move: string, move
+    :return: boolean
+    """
     if len(move) < 6 or len(move) > 7:
         return False
     if not (move[0] == 'w' or move[0] == 'b'):
@@ -26,6 +31,9 @@ class ChessGame:
     IND = {"P": 0, "K": 1, "N": 2, "Q": 3, "R": 4, "B": 5}
 
     def __init__(self):
+        """
+
+        """
         self.board = np.array([["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"],
                                ["bP", "bP", "bP", "bP", "bP", "bP", "bP", "bP"],
                                ["--", "--", "--", "--", "--", "--", "--", "--"],
@@ -48,6 +56,10 @@ class ChessGame:
         self.taken_material = []
 
     def recalculate(self):
+        """
+        Resets and recalculates the pieces in the black/white material arrays
+        :return: void
+        """
         self.black_material = np.array([set([]), set([]), set([]), set([]), set([]), set([]), set([]), set([])])
         self.white_material = np.array([set([]), set([]), set([]), set([]), set([]), set([]), set([]), set([])])
         for i in range(8):
@@ -59,6 +71,11 @@ class ChessGame:
                     arr[ind].add(addr)
 
     def move_piece(self, move):
+        """
+        Checks if a move is a valid move
+        :param move: string, represents what piece is being moved and to where
+        :return: boolean, whether the move has gone through or not
+        """
         if not validate_move(move):
             return False
         if not self.turn == move[0]:
@@ -79,6 +96,12 @@ class ChessGame:
         return False
 
     def move(self, move, dont_check=False):
+        """
+        Moves a piece if it is a valid move, represented on the board and in other structures of ChessGame
+        :param move: string, represents what piece is being moved and to where
+        :dont_check: boolean, whether we need to check if the move string is valid
+        :return: boolean, whether the move has gone through or not
+        """
         if dont_check or self.move_piece(move):
             coords = convert(move) #Make sure to mark that king or rook has moved
             self.handle_set(move)
@@ -122,6 +145,13 @@ class ChessGame:
         return False
 
     def unmove(self, moves=None, board=None, taken=None):
+        """
+        Reverts the last move that ocurred
+        :param moves: list, string of moves, ordered from first to last
+        :param board: ChessGame board
+        :param taken: list, string pieces that have been taken, arranged from first to last
+        :return: void
+        """
         if moves is None and board is None and taken is None:
             moves = self.moves
             board = self.board
@@ -167,6 +197,14 @@ class ChessGame:
         return False
 
     def convert_to_move(self, x1, y1, x2, y2):
+        """
+        Turns a 4-tuple of coordinates into a string move
+        :param x1: integer, first coordinate, x of the start
+        :param y1: integer, second coordinate, y of the start
+        :param x2: integer, third coordinate, x of the end square
+        :param y2: integer, fourth coordinate, y of the end square
+        :return: string, final move
+        """
         ans = self.board[x1][y1]
         ans += revert(x1, y1) + revert(x2, y2)
         if self.board[x1][y1][1] == "P" and y2 - y1 != 0 and self.board[x2][y2] == "--":
@@ -176,6 +214,10 @@ class ChessGame:
         return ans
 
     def generate_valid_moveset(self):
+        """
+        Creates a list of all valid moves in a certain gamestate
+        :return list, of string moves that are valid:
+        """
         iswhite = (self.turn == "w")
         pieces = self.white_material if iswhite else self.black_material
         col = self.turn
@@ -204,6 +246,11 @@ class ChessGame:
         return ans1
 
     def handle_set(self, move):
+        """
+        Handles the material and moved sets/lists that we maintain
+        :param move: string, the move we are carryign out, already checking
+        :return: void
+        """
         arr = self.black_material if move[0] == "b" else self.white_material
         ind = int(ChessGame.IND[move[1]])
         arr[ind].remove(move[2:4])
@@ -219,17 +266,30 @@ class ChessGame:
             self.taken_material.append(s)
 
     def print_board(self):
+        """
+        Prints the chess board's current state
+        :return: void
+        """
         for i in range(8):
             for j in range(8):
                 print(self.board[i][j], end=" ")
             print()
 
     def print_moves(self):
+        """
+        Prints out list of moves that have occurred
+        :return: none
+        """
         for move in self.moves:
             print(move, end="->")
         print("END")
 
     def possible_moves(self, coords):
+        """
+        Returns a list of moves for a specific piece
+        :param coords: strings, represent what square we are looking at
+        :return: list, strings that represent valid moves
+        """
         pieceType = coords[1]
         if pieceType == "R":
             return valid_rook(coords, self.board, self.pinned)
@@ -245,6 +305,13 @@ class ChessGame:
             return valid_pawn(coords, self.board, self.moves, self.movedPawns, self.pinned)
 
     def in_check(self, is_white, x=-1, y=-1):
+        """
+        Returns whether the side is in check or not
+        :param is_white: boolean, whether we are checking if white/black is in check or not
+        :param x: integer, first index of array
+        :param y: integer, second index of array
+        :return: boolean, whether a side is in check or not
+        """
         arr = self.black_material if not is_white else self.white_material
         knight_move = [[1, 2], [2, 1], [-1, 2], [2, -1], [-1, -2], [-2, -1], [1, -2], [-2, 1]]
         attack_inc = -1 if is_white else 1
@@ -271,6 +338,13 @@ class ChessGame:
         return False
 
     def check_dir(self, is_white, x=-1, y=-1):
+        """
+        Creates a list of all directions of attack on the kiing
+        :param is_white: string, what color we are looking for w or b
+        :param x: integer, coordinate on board
+        :param y: integer, coordinate on board
+        :return: list, of 4-tuples, start and end of move
+        """
         ans = []
         arr = self.black_material if not is_white else self.white_material
         knight_move = [[1, 2], [2, 1], [-1, 2], [2, -1], [-1, -2], [-2, -1], [1, -2], [-2, 1]]
@@ -312,6 +386,13 @@ class ChessGame:
         return ans
 
     def same_axis(self, x, y, dirs):
+        """
+        Used for looking at whether a piece is in between an attack on the king
+        :param x: integer, coordinate
+        :param y: integer, coordinate
+        :param dirs: 2-tuple of integers, represents direction
+        :return: boolean, whether piece is aligned in attack
+        """
         for dir in dirs:
             if abs(dir[0]) < 2 and abs(dir[1]) < 2 and len(dir) == 2:
                 if x == dir[1] and y != dir[0] or x == dir[0] and y != dir[1]:
@@ -319,6 +400,11 @@ class ChessGame:
         return False
 
     def checkmate(self, coords):
+        """
+        Returns whether a side has been checkmated
+        :param coords: string, coordinates of the king
+        :return: boolean, whether side is checkmated or not
+        """
         is_white = True if coords[0] == "w" else False
         x, y = convert_n(coords[3]), convert_s(coords[2])
         check_dir = self.check_dir(is_white)
@@ -340,6 +426,15 @@ class ChessGame:
         return len(temp) == 0
 
     def blocker(self, x, y, x_inc, y_inc, look):
+        """
+        Looks in a direction and sees if there is a valid move that blocks an attack
+        :param x: integer, location of where we are checking on board
+        :param y: integer, location of where we are checking on board
+        :param x_inc: integer, increment, helps indicate direction of attacl
+        :param y_inc: integer, increment, helps indicate direction of attack
+        :param look: string, whether piece is white or black
+        :return: list of moves, moves can block
+        """
         ans = []
         for i in range(7):
             x += x_inc
@@ -350,6 +445,13 @@ class ChessGame:
         return ans
 
     def covered(self, x, y, look):
+        """
+        Finds a list of string moves
+        :param x: integer, x coordinate on board
+        :param y: integer, y coordinate on board
+        :param look: string, is either w or b depending on what colored piece we are looking for
+        :return: list, of string moves that would block the attack
+        """
         ans = []
         piece = look + "N"
         inc = 1 if look == "w" else -1
@@ -371,8 +473,17 @@ class ChessGame:
         return ans
 
     def covered_help(self, x, y, x_inc, y_inc, piece1, piece2):
+        """
+        Returns a list of pieces + coordinates that would be able to move in to cover the square
+        :param x: integer, first coordinate on board
+        :param y: integer, second coordinate on board
+        :param x_inc: integer, increment direction
+        :param y_inc: integer, increment direction
+        :param piece1: string, piece we are looking for
+        :param piece2: string, second piece we are looking for
+        :return: list, of string pieces + location
+        """
         ans = []
-        opp = "w" if piece1[0] == "b" else "b"
         for i in range(7):
             x += x_inc
             y += y_inc
@@ -390,10 +501,12 @@ class ChessGame:
                     ans.append(loc)
         return ans
 
-    def attacks(self, x, y, look):
-        return self.board
-
     def pinned(self, coords):
+        """
+        Returns whether a piece is pinned
+        :param coords: string, coordinates of where
+        :return: boolean, whether piece is pinned
+        """
         arr = self.black_material if coords[0] == "b" else self.white_material
         is_white = coords[0]
         addr = arr[1].pop()
@@ -416,21 +529,15 @@ class ChessGame:
         return False
 
 
-# Need methods: Find possible moves for side, Handles Promotion
-
 c = ChessGame()
 ai = ChessAi(c)
+"""
+Game Loop
+"""
 while True:
     c.print_board()
     move = input("Enter move:")
     c.move(move)
     ai.move_turn()
 
-# c.move("bPe7e5")
-# c.move("wKe1g1")
-# c.move("bKe8g8")
-# c.move("wPe2e4")
-# c.move("bPf7f5")
-# c.print_board()
-# c.print_moves()
 
