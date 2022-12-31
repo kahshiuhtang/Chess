@@ -57,8 +57,6 @@ class ChessGame:
                     ind = ChessGame.IND[self.board[i][j][1]]
                     addr = revert(i, j)
                     arr[ind].add(addr)
-        print(self.black_material)
-        print(self.white_material)
 
     def move_piece(self, move):
         if not validate_move(move):
@@ -95,7 +93,7 @@ class ChessGame:
                 row = 0 if move[0] == "w" else 1
                 self.movedPawns[row][coords[1]] = True
             if move[1] == "P" and not move[2] == move[4] and len(move) == 7 and move[6] == "e": #En Passant
-                inc = 1 if move[0] == "w" else -1
+                inc = -1 if move[0] == "w" else 1
                 self.board[coords[2]+inc][coords[3]] = "--"
                 st = move[4] + str(int(move[5]) + inc)
                 arr = self.black_material if move[0] == "w" else self.white_material
@@ -214,6 +212,8 @@ class ChessGame:
             arr = self.black_material if move[0] == "w" else self.white_material
             c = [convert_n(move[5]), convert_s(move[4])]
             p = str(self.board[c[0]][c[1]][1])
+            if p == "K":
+                return
             s = ("w" if move[0] == "b" else "b") + str(p)
             arr[ChessGame.IND[p]].remove(move[4:6])
             self.taken_material.append(s)
@@ -254,7 +254,6 @@ class ChessGame:
             kx, ky = convert_n(xy[1]), convert_s(xy[0])
         else:
             kx, ky = x, y
-        print(str(kx) + "" + str(ky))
         opp = "bN" if is_white else "wN"
         for move in knight_move:
             if in_bounds(kx + move[0], ky + move[1]) and self.board[kx + move[0]][ky + move[1]] == opp:

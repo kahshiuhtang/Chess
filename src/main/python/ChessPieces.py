@@ -262,16 +262,3 @@ def revert(x, y):
     fir = chr(ord('a') + y)
     sec = 8 - int(x)
     return str(fir) + str(sec)
-
-
-board = [["bR", "--", "--", "--", "bK", "--", "--", "bR"],
-         ["wP", "bP", "wP", "--", "--", "wB", "--", "--"],
-         ["--", "--", "--", "--", "--", "--", "--", "--"],
-         ["--", "--", "--", "wB", "--", "--", "--", "--"],
-         ["--", "--", "wB", "wN", "wB", "--", "wP", "--"],
-         ["--", "--", "--", "--", "--", "--", "--", "--"],
-         ["wP", "bP", "--", "--", "--", "wP", "--", "--"],
-         ["wR", "--", "--", "--", "wK", "--", "--", "wR"]]
-
-arr = [[False, False, False, False, False, False, False, False],
-       [False, False, False, False, False, False, False, False,]]

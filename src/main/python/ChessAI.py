@@ -26,32 +26,32 @@ class ChessAi:
                          [0,0,0,0,0,0,0,0],
                          [0,0,0,0,0,0,0,0]])
 
-    QUEEN_POS = np.array([[0, 0, 0, 0, 0, 0, 0, 0],
-                          [0, 0, 0, 0, 0, 0, 0, 0],
-                          [0, 0, 0, 0, 0, 0, 0, 0],
-                          [0, 0, 0, 0, 0, 0, 0, 0],
-                          [0, 0, 0, 0, 0, 0, 0, 0],
-                          [0, 0, 0, 0, 0, 0, 0, 0],
-                          [0, 0, 0, 0, 0, 0, 0, 0],
-                          [0, 0, 0, 0, 0, 0, 0, 0]])
+    QUEEN_POS = np.array([[20, 0, 0, 35, 35, 0, 0, 20],
+                          [0, 25, 0, 0, 0, 0, 25, 0],
+                          [0, 0, 40, 0, 0, 40, 0, 0],
+                          [27.5, 0, 0, 35, 35, 0, 0, 27.5],
+                          [27.5, 0, 0, 35, 35, 0, 0, 27.5],
+                          [0, 0, 30, 0, 0, 30, 0, 0],
+                          [0, 25, 0, 20, 20, 0, 25, 0],
+                          [20, 0, 0, 25, 25, 0, 0, 20]])
 
     BISHOP_POS = np.array([[0, 0, 0, 0, 0, 0, 0, 0],
                            [0, 0, 0, 0, 0, 0, 0, 0],
-                           [0, 0, 0, 0, 0, 0, 0, 0],
-                           [0, 0, 0, 0, 0, 0, 0, 0],
-                           [0, 0, 0, 0, 0, 0, 0, 0],
-                           [0, 0, 0, 0, 0, 0, 0, 0],
-                           [0, 0, 0, 0, 0, 0, 0, 0],
-                           [0, 0, 0, 0, 0, 0, 0, 0]])
+                           [0, 0, 8, 10, 10, 8, 0, 0],
+                           [0, 0, 0, 14, 14, 0, 0, 0],
+                           [0, 0, 0, 14, 14, 0, 0, 0],
+                           [0, 0, 12, 8, 8, 12, 0, 0],
+                           [0, 10, 0, 0, 0, 0, 10, 0],
+                           [0, 0, 0, 7, 7, 0, 0, 0]])
 
-    ROOK_POS = np.array([[0, 0, 0, 0, 0, 0, 0, 0],
+    ROOK_POS = np.array([[15, 0, 0, 25, 25, 0, 0, 15],
+                         [10, 10, 15, 20, 20, 15, 10, 10],
                          [0, 0, 0, 0, 0, 0, 0, 0],
+                         [0, 0, 0, 10, 10, 0, 0, 0],
+                         [0, 0, 0, 10, 10, 0, 0, 0],
                          [0, 0, 0, 0, 0, 0, 0, 0],
-                         [0, 0, 0, 0, 0, 0, 0, 0],
-                         [0, 0, 0, 0, 0, 0, 0, 0],
-                         [0, 0, 0, 0, 0, 0, 0, 0],
-                         [0, 0, 0, 0, 0, 0, 0, 0],
-                         [0, 0, 0, 0, 0, 0, 0, 0]])
+                         [10, 0, 0, 15, 15, 0, 0, 10],
+                         [0, 0, 0, 15, 15, 0, 0, 0]])
 
     def __init__(self, chess_game):
         self.chess_game = chess_game
@@ -59,11 +59,11 @@ class ChessAi:
     def move_turn(self):
         moves = self.chess_game.generate_valid_moveset()
         random.shuffle(moves)
-        self.find_move(moves, 2, 2, -CHECKMATE, CHECKMATE, 1 if self.chess_game.turn == "w" else -1)
+        self.find_move(moves, 3, 3, -CHECKMATE, CHECKMATE, 1 if self.chess_game.turn == "w" else -1)
         global next_move
         if next_move is None:
             return
-        print(next_move)
+        print(count)
         self.chess_game.move(next_move)
 
     def find_move(self, valid_moves, depth, DEPTH,  alpha, beta, tm):
@@ -91,9 +91,20 @@ class ChessAi:
         return self.evaluate_material()
 
     def evaluate_material(self):
+        global count
+        count = count + 1
         arr = self.chess_game.white_material
         score = 0.0
-        #Check for checkmate
+        wking = arr[1].pop()
+        arr[1].add(wking)
+        wking = "wK" + wking
+        bking = self.chess_game.black_material[1].pop()
+        self.chess_game.black_material[1].add(bking)
+        bking = "bK" + bking
+        if self.chess_game.checkmate(wking):
+            return -CHECKMATE
+        if self.chess_game.checkmate(bking):
+            return CHECKMATE
         for i in arr[0]:
             score += ChessAi.MATERIAL["P"]
             ind = convert(i) if self.chess_game.turn == "w" else flip(convert(i))
@@ -104,16 +115,16 @@ class ChessAi:
             score += ChessAi.KNIGHT_POS[ind[0]][ind[1]]
         for i in arr[3]:
             score += ChessAi.MATERIAL["Q"]
-            # ind = convert(i) if self.chess_game.turn == "w" else flip(convert(i))
-            # score += ChessAi.QUEEN_POS[ind[0]][ind[1]]
+            ind = convert(i) if self.chess_game.turn == "w" else flip(convert(i))
+            score += ChessAi.QUEEN_POS[ind[0]][ind[1]]
         for i in arr[4]:
             score += ChessAi.MATERIAL["R"]
-            # ind = convert(i) if self.chess_game.turn == "w" else flip(convert(i))
-            # score += ChessAi.ROOK_POS[ind[0]][ind[1]]
+            ind = convert(i) if self.chess_game.turn == "w" else flip(convert(i))
+            score += ChessAi.ROOK_POS[ind[0]][ind[1]]
         for i in arr[5]:
             score += ChessAi.MATERIAL["B"]
-            # ind = convert(i) if self.chess_game.turn == "w" else flip(convert(i))
-            # score += ChessAi.BISHOP_POS[ind[0]][ind[1]]
+            ind = convert(i) if self.chess_game.turn == "w" else flip(convert(i))
+            score += ChessAi.BISHOP_POS[ind[0]][ind[1]]
         arr = self.chess_game.black_material
         for i in arr[0]:
             score -= ChessAi.MATERIAL["P"]
@@ -121,24 +132,21 @@ class ChessAi:
             score -= ChessAi.PAWN_POS[ind[0]][ind[1]]
         for i in arr[2]:
             score -= ChessAi.MATERIAL["N"]
-            #ind = convert(i) if self.chess_game.turn == "w" else flip(convert(i))
-            #score -= ChessAi.KNIGHT_POS[ind[0]][ind[1]]
-            # print(i)
-            # print(ind)
+            ind = convert(i) if self.chess_game.turn == "w" else flip(convert(i))
+            score -= ChessAi.KNIGHT_POS[ind[0]][ind[1]]
         for i in arr[3]:
             score -= ChessAi.MATERIAL["Q"]
-            # ind = convert(i) if self.chess_game.turn == "w" else flip(convert(i))
-            # score -= ChessAi.QUEEN_POS[ind[0]][ind[1]]
+            ind = convert(i) if self.chess_game.turn == "w" else flip(convert(i))
+            score -= ChessAi.QUEEN_POS[ind[0]][ind[1]]
         for i in arr[4]:
             score -= ChessAi.MATERIAL["R"]
-            # ind = convert(i) if self.chess_game.turn == "w" else flip(convert(i))
-            # score -= ChessAi.ROOK_POS[ind[0]][ind[1]]
+            ind = convert(i) if self.chess_game.turn == "w" else flip(convert(i))
+            score -= ChessAi.ROOK_POS[ind[0]][ind[1]]
         for i in arr[5]:
             score -= ChessAi.MATERIAL["B"]
-            # ind = convert(i) if self.chess_game.turn == "w" else flip(convert(i))
-            # score -= ChessAi.BISHOP_POS[ind[0]][ind[1]]
+            ind = convert(i) if self.chess_game.turn == "w" else flip(convert(i))
+            score -= ChessAi.BISHOP_POS[ind[0]][ind[1]]
         return score
-
 
 def convert_s(symbol):
     return ord(symbol) - 97
