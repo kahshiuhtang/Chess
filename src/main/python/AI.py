@@ -14,6 +14,25 @@ def convert(location):
     x = 8 - int(location[1])
     return [x, y]
 
+def convert_s(symbol):
+    return ord(symbol) - 97
+
+
+def convert_n(num):
+    return 8-int(num)
+
+
+def revert(x, y):
+    """
+    Turns two integers into a string coordinate
+    :param x:
+    :param y:
+    :return: string
+    """
+    fir = chr(ord('a') + y)
+    sec = 8 - int(x)
+    return str(fir) + str(sec)
+
 
 class AI:
     """
@@ -84,7 +103,7 @@ class AI:
 
     def minmax(self, valid_moves, depth, DEPTH,  alpha, beta, tm):
         """
-        MinMax algorithm
+        MinMax algorithm with alpha-beta pruning
         Recursively finds the best move based on after each possible move up to certain depth
         :param valid_moves: string list, valid moves at a specific position
         :param depth: integer, how close we are until the function returns
@@ -156,23 +175,100 @@ class AI:
                         score += mult * self.pawn_scores[::mult][xy[0]][xy[1]]
                     elif piece.piece_type == 4:
                         score += mult*5.0
+                        score += mult*self.rook_attacker_score(square, color)
                         score += mult * self.rook_scores[::mult][xy[0]][xy[1]]
                     elif piece.piece_type == 3:
                         score += mult*3.0
+                        score += mult * self.bishop_attacker_score(square, color)
                         score += mult * self.bishop_scores[::mult][xy[0]][xy[1]]
                     elif piece.piece_type == 2:
                         score += mult*2.75
+                        score += mult * self.knight_attacker_score(square, color)
                         score += mult * self.knight_scores[::mult][xy[0]][xy[1]]
                     elif piece.piece_type == 5:
                         score += mult*10.00
+                        score += mult * self.queen_attacker_score(square, color)
                         score += mult * self.queen_scores[::mult][xy[0]][xy[1]]
         return score
+
+    def rook_attacker_score(self, coords, color):
+        """
+            :param coords: string, coordinates of piece we are checking
+            :return: double - score of the attacking strength of this piece
+            """
+        if self.game.is_pinned(color, chess.parse_square(coords)):
+            return -3.0
+        return self.check_direction(coords, color, 1, 0) + self.check_direction(coords, color, 0, 1) + \
+               self.check_direction(coords, color, -1, 0) + self.check_direction(coords, color, 0, -1)
+
+    def bishop_attacker_score(self, coords, color):
+        """
+            :param coords: string, coordinates of piece we are checking
+            :return: double - score of the attacking strength of this piece
+        """
+        if self.game.is_pinned(color, chess.parse_square(coords)):
+            return -1.5
+        return self.check_direction(coords, color, 1, 1) + self.check_direction(coords, color, -1, 1) + \
+               self.check_direction(coords, color, -1, -1) + self.check_direction(coords, color, 1, -1)
+
+    def queen_attacker_score(self, coords, color):
+        """
+            :param coords: string, coordinates of piece we are checking
+            :return: double - score of the attacking strength of this piece
+        """
+        if self.game.is_pinned(color, chess.parse_square(coords)):
+            return -7.0
+        return self.rook_attacker_score(coords, color) + self.bishop_attacker_score(coords, color)
+
+    def knight_attacker_score(self, coords, color):
+        """
+            :param coords: string, coordinates of piece we are checking
+            :return: double - score of the attacking strength of this piece
+        """
+        if self.game.is_pinned(color, chess.parse_square(coords)):
+            return -1.25
+        moves = [[1, 2], [2, 1], [-1, 2], [2, -1], [-1, -2], [-2, -1], [1, -2], [-2, 1]]
+        ans = 0
+        return ans
+
+    def check_direction(self, coords, is_white, x_inc, y_inc):
+        """
+        :param coords: string, coordinates of starting square
+        :param is_white: boolean, whether we are looking for white or black pieces
+        :param x_inc: int, how much x index increases
+        :param y_inc: int, how much y index increase
+        :return: double: score of how valuable this piece it is attacking is
+        """
+        x = convert_s(coords[0])
+        y = convert_n(coords[1])
+        for i in range(8):
+            x += x_inc
+            y += y_inc
+            if x < 0 or x > 7 or y < 0 or y > 7:
+                return 0
+            square = revert(x, y)
+            piece = board.piece_at(chess.parse_square(square))
+            if piece is not None:
+                color = board.color_at(chess.parse_square(square))
+                if color == is_white:
+                    if piece.piece_type == 1:
+                        return 1.0
+                    elif piece.piece_type == 2:
+                        return 2.75
+                    elif piece.piece_type == 3:
+                        return 3.0
+                    elif piece.piece_type == 4:
+                        return 5.0
+                    elif piece.piece_type == 5:
+                        return 9.0
+                else:
+                    return 0
 
 
 board = chess.Board()
 ai = AI(board)
 sum = 0.0
-for i in range(25):
+for i in range(5):
     board = chess.Board()
     ai = AI(board)
     board.push(chess.Move.from_uci("e2e4"))
