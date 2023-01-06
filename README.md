@@ -1,6 +1,8 @@
 # Chess with AI
 
-## Java
+## Java + Python Versions
+
+### Java Featurs
 
 #### Contents
 
@@ -16,7 +18,7 @@
 - Pieces Folder
 - Pawn, Knight, Bishop, Rook, Queen, King - Represent one instance of each piece, used in ChessGame and ChessFrame
 
-## Python
+### Python Featurs
 
 #### Contents
 
@@ -30,6 +32,7 @@
 
 - ChessAI - AI that uses functions built from ChessGame
 - AI - AI using python-chess library
+  - Uses PostGreSQL to store moves to prevent recalculating
 - ChessPieces - Functions that maintain game state in chess game
 - ChessGame - Main handler for maintaining the chess game, works with ChessPieces functions
 
@@ -37,3 +40,4 @@
 
 - python-chess
 - numpy
+- psycopg

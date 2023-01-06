@@ -1,5 +1,6 @@
 import chess, random
 import numpy as np
+import psycopg
 
 CHECKMATE = 100
 next_move = None
@@ -66,14 +67,14 @@ class AI:
                    [0.10, 0.15, 0.20, 0.50, 0.50, 0.25, 0.25, 0.10],
                    [0.15, 0.25, 0.35, 0.45, 0.45, 0.35, 0.25, 0.15]]
 
-    queen_scores = [[1.0, 1.2, 1.3, 1.4, 1.4, 1.3, 1.2, 1.0],
-                    [0.65, 0.75, 0.85, 0.95, 0.95, 0.85, 0.75, 0.65],
-                    [0.80, 0.90, 1.00, 1.25, 1.25, 1.00, 0.90, 0.80],
-                    [0.70, 0.90, 1.00, 1.50, 1.50, 1.00, 0.90, 0.70],
-                    [0.65, 0.75, 0.85, 1.00, 1.00, 0.85, 0.75, 0.65],
-                    [0.20, 0.30, 0.50, 0.75, 0.75, 0.50, 0.40, 0.20],
-                    [0.10, 0.30, 0.35, 0.50, 0.50, 0.35, 0.30, 0.10],
-                    [0.00, 0.20, 0.20, 0.30, 0.30, 0.20, 0.20, 0.00]]
+    queen_scores = [[0.25, 0.30, 0.30, 0.35, 0.35, 0.30, 0.30, 0.25],
+                    [0.20, 0.25, 0.25, 0.35, 0.35, 0.25, 0.25, 0.20],
+                    [0.15, 0.10, 0.20, 0.25, 0.25, 0.20, 0.10, 0.15],
+                    [0.20, 0.25, 0.25, 0.35, 0.35, 0.25, 0.25, 0.20],
+                    [0.15, 0.25, 0.30, 0.40, 0.40, 0.30, 0.25, 0.15],
+                    [0.10, 0.15, 0.25, 0.30, 0.30, 0.25, 0.15, 0.10],
+                    [0.05, 0.10, 0.15, 0.25, 0.25, 0.15, 0.10, 0.05],
+                    [0.00, 0.10, 0.10, 0.20, 0.20, 0.10, 0.10, 0.00]]
 
     pawn_scores = [[1.00, 1.20, 1.40, 1.50, 1.50, 1.40, 1.20, 1.00],
                    [0.70, 0.75, 0.85, 0.95, 0.95, 0.85, 0.75, 0.70],
@@ -97,8 +98,17 @@ class AI:
         depth = 3
         global count
         count = 0
-        self.minmax(moves, depth, depth, -CHECKMATE, CHECKMATE, 1 if self.game.turn else -1)
         global next_move
+        self.minmax(moves, depth, depth, -CHECKMATE, CHECKMATE, 1 if self.game.turn else -1)
+        with psycopg.connect("dbname=test user=postgres") as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "INSERT  INTO test (id, move) VALUES (%s, %s) on conflict(id) do update set move = (%s)",
+                    (board.fen(), next_move.uci(), next_move.uci()))
+                cur.execute("SELECT * FROM test")
+                cur.fetchone()
+                for record in cur:
+                    print(record)
         self.game.push(next_move)
 
     def minmax(self, valid_moves, depth, DEPTH,  alpha, beta, tm):
@@ -228,7 +238,29 @@ class AI:
         if self.game.is_pinned(color, chess.parse_square(coords)):
             return -1.25
         moves = [[1, 2], [2, 1], [-1, 2], [2, -1], [-1, -2], [-2, -1], [1, -2], [-2, 1]]
+        orig = board.piece_at(chess.parse_square(coords))
+        x = convert_s(coords[0])
+        y = convert_n(coords[1])
         ans = 0
+        for move in moves:
+            if x + move[0] < 0 or x + move[0] > 7 or y + move[1] < 0 or y + move[1] > 7:
+                pass
+            else:
+                strn = revert(x + move[0], y + move[1])
+                piece = board.piece_at(chess.parse_square(strn))
+                if piece is not None:
+                    is_white = board.color_at(chess.parse_square(strn))
+                    if color == is_white:
+                        if piece.piece_type == 1:
+                            ans += 0.15 if orig.piece_type - piece.piece_type > 0 else 0.25
+                        elif piece.piece_type == 2:
+                            ans += 0.4 if orig.piece_type - piece.piece_type > 0 else 0.75
+                        elif piece.piece_type == 3:
+                            ans += 0.5 if orig.piece_type - piece.piece_type > 0 else 0.9
+                        elif piece.piece_type == 4:
+                            ans += 0.75 if orig.piece_type - piece.piece_type > 0 else 1.25
+                        elif piece.piece_type == 5:
+                            ans += 1 if orig.piece_type - piece.piece_type > 0 else 3
         return ans
 
     def check_direction(self, coords, is_white, x_inc, y_inc):
@@ -239,6 +271,7 @@ class AI:
         :param y_inc: int, how much y index increase
         :return: double: score of how valuable this piece it is attacking is
         """
+        orig = board.piece_at(chess.parse_square(coords))
         x = convert_s(coords[0])
         y = convert_n(coords[1])
         for i in range(8):
@@ -252,29 +285,34 @@ class AI:
                 color = board.color_at(chess.parse_square(square))
                 if color == is_white:
                     if piece.piece_type == 1:
-                        return 1.0
+                        return 0.15 if orig.piece_type - piece.piece_type > 0 else 0.25
                     elif piece.piece_type == 2:
-                        return 2.75
+                        return 0.4 if orig.piece_type - piece.piece_type > 0 else 0.75
                     elif piece.piece_type == 3:
-                        return 3.0
+                        return 0.5 if orig.piece_type - piece.piece_type > 0 else 0.9
                     elif piece.piece_type == 4:
-                        return 5.0
+                        return 0.75 if orig.piece_type - piece.piece_type > 0 else 1.25
                     elif piece.piece_type == 5:
-                        return 9.0
+                        return 1 if orig.piece_type - piece.piece_type > 0 else 3
                 else:
                     return 0
 
 
+with psycopg.connect("dbname=test user=postgres") as conn:
+    with conn.cursor() as cur:
+        print("Here")
+        #cur.execute("""CREATE TABLE test (id text PRIMARY KEY,move text)""")
 board = chess.Board()
+print(board.fen())
 ai = AI(board)
-sum = 0.0
-for i in range(5):
-    board = chess.Board()
-    ai = AI(board)
-    board.push(chess.Move.from_uci("e2e4"))
-    ai.move()
-    sum += count
-print(sum/25)
+#sum = 0.0
+#for i in range(5):
+#    board = chess.Board()
+#    ai = AI(board)
+#    board.push(chess.Move.from_uci("e2e4"))
+#    ai.move()
+#    sum += count
+#print(sum/5)
 
 while True:
     print(board)
