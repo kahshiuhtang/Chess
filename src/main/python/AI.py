@@ -2,7 +2,7 @@ import chess, random
 import numpy as np
 import psycopg
 
-CHECKMATE = 100
+CHECKMATE = 250
 next_move = None
 count = 0
 
@@ -41,13 +41,13 @@ class AI:
     Positional scores of pieces are stored in following 2D arrays
     """
     knight_scores = [[0.00, 0.05, 0.10, 0.15, 0.15, 0.10, 0.05, 0.00],
-                     [0.15, 0.20, 0.20, 0.25, 0.25, 0.20, 0.20, 0.15],
-                     [0.20, 0.35, 0.45, 0.45, 0.45, 0.45, 0.35, 0.20],
-                     [0.20, 0.25, 0.45, 0.55, 0.55, 0.45, 0.25, 0.20],
-                     [0.15, 0.20, 0.45, 0.50, 0.50, 0.45, 0.20, 0.15],
-                     [0.10, 0.20, 0.30, 0.35, 0.35, 0.30, 0.30, 0.10],
-                     [0.10, 0.10, 0.20, 0.25, 0.25, 0.20, 0.10, 0.10],
-                     [0.00, 0.10, 0.15, 0.20, 0.20, 0.15, 0.10, 0.00]]
+                     [0.10, 0.20, 0.20, 0.25, 0.25, 0.20, 0.20, 0.10],
+                     [0.10, 0.30, 0.30, 0.35, 0.35, 0.30, 0.25, 0.10],
+                     [0.15, 0.25, 0.45, 0.55, 0.55, 0.45, 0.25, 0.15],
+                     [0.10, 0.20, 0.45, 0.50, 0.50, 0.45, 0.20, 0.10],
+                     [0.05, 0.20, 0.30, 0.35, 0.35, 0.30, 0.30, 0.05],
+                     [0.05, 0.10, 0.20, 0.25, 0.25, 0.20, 0.10, 0.05],
+                     [0.00, -0.10, 0.15, 0.20, 0.20, 0.15, -0.10, 0.00]]
 
     bishop_scores = [[0.00, 0.10, 0.20, 0.30, 0.30, 0.20, 0.10, 0.00],
                      [0.00, 0.15, 0.25, 0.35, 0.35, 0.25, 0.15, 0.00],
@@ -56,7 +56,7 @@ class AI:
                      [0.15, 0.30, 0.40, 0.75, 0.75, 0.40, 0.30, 0.15],
                      [0.25, 0.30, 0.40, 0.65, 0.65, 0.40, 0.30, 0.25],
                      [0.40, 0.60, 0.50, 0.50, 0.50, 0.50, 0.60, 0.40],
-                     [0.50, 0.35, 0.25, 0.30, 0.30, 0.25, 0.35, 0.60]]
+                     [0.50, 0.35, -0.25, 0.30, 0.30, -0.25, 0.35, 0.60]]
 
     rook_scores = [[0.70, 0.95, 1.05, 1.25, 1.25, 1.05, 0.95, 0.70],
                    [0.55, 0.65, 0.75, 0.85, 0.85, 0.75, 0.65, 0.55],
@@ -65,7 +65,7 @@ class AI:
                    [0.25, 0.35, 0.45, 0.60, 0.60, 0.45, 0.35, 0.25],
                    [0.20, 0.30, 0.35, 0.55, 0.55, 0.35, 0.30, 0.20],
                    [0.10, 0.15, 0.20, 0.50, 0.50, 0.25, 0.25, 0.10],
-                   [0.15, 0.25, 0.35, 0.45, 0.45, 0.35, 0.25, 0.15]]
+                   [-0.25, 0.25, 0.35, 0.55, 0.45, 0.55, 0.25, -0.25]]
 
     queen_scores = [[0.25, 0.30, 0.30, 0.35, 0.35, 0.30, 0.30, 0.25],
                     [0.20, 0.25, 0.25, 0.35, 0.35, 0.25, 0.25, 0.20],
@@ -105,10 +105,10 @@ class AI:
                 cur.execute(
                     "INSERT  INTO test (id, move) VALUES (%s, %s) on conflict(id) do update set move = (%s)",
                     (board.fen(), next_move.uci(), next_move.uci()))
-                cur.execute("SELECT * FROM test")
-                cur.fetchone()
-                for record in cur:
-                    print(record)
+                #cur.execute("SELECT * FROM test")
+                #cur.fetchone()
+                #for record in cur:
+                    #print(record)
         self.game.push(next_move)
 
     def minmax(self, valid_moves, depth, DEPTH,  alpha, beta, tm):
@@ -183,27 +183,33 @@ class AI:
                     if piece.piece_type == 1:
                         score += mult*1.0
                         score += mult * self.pawn_scores[::mult][xy[0]][xy[1]]
+                        score += mult * self.pawn_placement_score(square, color)
                     elif piece.piece_type == 4:
                         score += mult*5.0
                         score += mult*self.rook_attacker_score(square, color)
                         score += mult * self.rook_scores[::mult][xy[0]][xy[1]]
+                        score += mult * self.rook_defender_score(square, color)
                     elif piece.piece_type == 3:
                         score += mult*3.0
                         score += mult * self.bishop_attacker_score(square, color)
+                        score += mult * self.bishop_defender_score(square, color)
                         score += mult * self.bishop_scores[::mult][xy[0]][xy[1]]
                     elif piece.piece_type == 2:
                         score += mult*2.75
                         score += mult * self.knight_attacker_score(square, color)
+                        score += mult * self.knight_defender_score(square, color)
                         score += mult * self.knight_scores[::mult][xy[0]][xy[1]]
                     elif piece.piece_type == 5:
                         score += mult*10.00
                         score += mult * self.queen_attacker_score(square, color)
+                        score += mult * self.queen_defender_score(square, color)
                         score += mult * self.queen_scores[::mult][xy[0]][xy[1]]
         return score
 
     def rook_attacker_score(self, coords, color):
         """
             :param coords: string, coordinates of piece we are checking
+            :param color: boolean, true if white otherwise false
             :return: double - score of the attacking strength of this piece
             """
         if self.game.is_pinned(color, chess.parse_square(coords)):
@@ -214,6 +220,7 @@ class AI:
     def bishop_attacker_score(self, coords, color):
         """
             :param coords: string, coordinates of piece we are checking
+            :param color: boolean, true if white otherwise false
             :return: double - score of the attacking strength of this piece
         """
         if self.game.is_pinned(color, chess.parse_square(coords)):
@@ -224,6 +231,7 @@ class AI:
     def queen_attacker_score(self, coords, color):
         """
             :param coords: string, coordinates of piece we are checking
+            :param color: boolean, true if white otherwise false
             :return: double - score of the attacking strength of this piece
         """
         if self.game.is_pinned(color, chess.parse_square(coords)):
@@ -233,12 +241,13 @@ class AI:
     def knight_attacker_score(self, coords, color):
         """
             :param coords: string, coordinates of piece we are checking
+            :param color: boolean, true if white otherwise false
             :return: double - score of the attacking strength of this piece
         """
         if self.game.is_pinned(color, chess.parse_square(coords)):
             return -1.25
         moves = [[1, 2], [2, 1], [-1, 2], [2, -1], [-1, -2], [-2, -1], [1, -2], [-2, 1]]
-        orig = board.piece_at(chess.parse_square(coords))
+        orig = self.game.piece_at(chess.parse_square(coords))
         x = convert_s(coords[0])
         y = convert_n(coords[1])
         ans = 0
@@ -247,31 +256,31 @@ class AI:
                 pass
             else:
                 strn = revert(x + move[0], y + move[1])
-                piece = board.piece_at(chess.parse_square(strn))
+                piece = self.game.piece_at(chess.parse_square(strn))
                 if piece is not None:
-                    is_white = board.color_at(chess.parse_square(strn))
+                    is_white = self.game.color_at(chess.parse_square(strn))
                     if color == is_white:
                         if piece.piece_type == 1:
-                            ans += 0.15 if orig.piece_type - piece.piece_type > 0 else 0.25
+                            return 0.025 if orig.piece_type - piece.piece_type > 0 else 0.05
                         elif piece.piece_type == 2:
-                            ans += 0.4 if orig.piece_type - piece.piece_type > 0 else 0.75
+                            return 0.075 if orig.piece_type - piece.piece_type > 0 else 0.125
                         elif piece.piece_type == 3:
-                            ans += 0.5 if orig.piece_type - piece.piece_type > 0 else 0.9
+                            return 0.10 if orig.piece_type - piece.piece_type > 0 else 0.15
                         elif piece.piece_type == 4:
-                            ans += 0.75 if orig.piece_type - piece.piece_type > 0 else 1.25
+                            return 0.15 if orig.piece_type - piece.piece_type > 0 else 0.25
                         elif piece.piece_type == 5:
-                            ans += 1 if orig.piece_type - piece.piece_type > 0 else 3
+                            return 0.225 if orig.piece_type - piece.piece_type > 0 else 0.45
         return ans
 
     def check_direction(self, coords, is_white, x_inc, y_inc):
         """
         :param coords: string, coordinates of starting square
         :param is_white: boolean, whether we are looking for white or black pieces
-        :param x_inc: int, how much x index increases
-        :param y_inc: int, how much y index increase
+        :param x_inc: int, how much x index increases per iteration
+        :param y_inc: int, how much y index increases per iteration
         :return: double: score of how valuable this piece it is attacking is
         """
-        orig = board.piece_at(chess.parse_square(coords))
+        orig = self.game.piece_at(chess.parse_square(coords))
         x = convert_s(coords[0])
         y = convert_n(coords[1])
         for i in range(8):
@@ -280,22 +289,150 @@ class AI:
             if x < 0 or x > 7 or y < 0 or y > 7:
                 return 0
             square = revert(x, y)
-            piece = board.piece_at(chess.parse_square(square))
+            piece = self.game.piece_at(chess.parse_square(square))
             if piece is not None:
-                color = board.color_at(chess.parse_square(square))
+                color = self.game.color_at(chess.parse_square(square))
                 if color == is_white:
                     if piece.piece_type == 1:
-                        return 0.15 if orig.piece_type - piece.piece_type > 0 else 0.25
+                        return 0.025 if orig.piece_type - piece.piece_type > 0 else 0.05
                     elif piece.piece_type == 2:
-                        return 0.4 if orig.piece_type - piece.piece_type > 0 else 0.75
+                        return 0.075 if orig.piece_type - piece.piece_type > 0 else 0.125
                     elif piece.piece_type == 3:
-                        return 0.5 if orig.piece_type - piece.piece_type > 0 else 0.9
+                        return 0.10 if orig.piece_type - piece.piece_type > 0 else 0.15
                     elif piece.piece_type == 4:
-                        return 0.75 if orig.piece_type - piece.piece_type > 0 else 1.25
+                        return 0.15 if orig.piece_type - piece.piece_type > 0 else 0.25
                     elif piece.piece_type == 5:
-                        return 1 if orig.piece_type - piece.piece_type > 0 else 3
+                        return 0.225 if orig.piece_type - piece.piece_type > 0 else 0.45
                 else:
                     return 0
+
+    def rook_defender_score(self, coords, color):
+        """
+            :param coords: string, coordinates of piece we are checking
+            :param color: boolean, true if white otherwise false
+            :return: double - score of the attacking strength of this piece
+            """
+        if self.game.is_pinned(color, chess.parse_square(coords)):
+            return -3.0
+        return self.check_defense(coords, color, 1, 0) + self.check_defense(coords, color, 0, 1) + \
+               self.check_defense(coords, color, -1, 0) + self.check_defense(coords, color, 0, -1)
+
+    def bishop_defender_score(self, coords, color):
+        """
+            :param coords: string, coordinates of piece we are checking
+            :param color: boolean, true if white otherwise false
+            :return: double - score of the attacking strength of this piece
+        """
+        if self.game.is_pinned(color, chess.parse_square(coords)):
+            return -1.5
+        return self.check_defense(coords, color, 1, 1) + self.check_defense(coords, color, -1, 1) + \
+               self.check_defense(coords, color, -1, -1) + self.check_defense(coords, color, 1, -1)
+
+    def queen_defender_score(self, coords, color):
+        """
+            :param coords: string, coordinates of piece we are checking
+            :param color: boolean, true if white otherwise false
+            :return: double - score of the attacking strength of this piece
+        """
+        if self.game.is_pinned(color, chess.parse_square(coords)):
+            return -7.0
+        return self.rook_defender_score(coords, color) + self.bishop_defender_score(coords, color)
+
+    def knight_defender_score(self, coords, color):
+        """
+            :param coords: string, coordinates of piece we are checking
+            :param color: boolean, true if white otherwise false
+            :return: double - score of the attacking strength of this piece
+        """
+        if self.game.is_pinned(color, chess.parse_square(coords)):
+            return -1.25
+        moves = [[1, 2], [2, 1], [-1, 2], [2, -1], [-1, -2], [-2, -1], [1, -2], [-2, 1]]
+        orig = self.game.piece_at(chess.parse_square(coords))
+        x = convert_s(coords[0])
+        y = convert_n(coords[1])
+        ans = 0
+        for move in moves:
+            if x + move[0] < 0 or x + move[0] > 7 or y + move[1] < 0 or y + move[1] > 7:
+                pass
+            else:
+                strn = revert(x + move[0], y + move[1])
+                piece = self.game.piece_at(chess.parse_square(strn))
+                if piece is not None:
+                    is_white = self.game.color_at(chess.parse_square(strn))
+                    if not color == is_white:
+                        if piece.piece_type == 1:
+                            return 0.00125 if orig.piece_type - piece.piece_type > 0 else 0.025
+                        elif piece.piece_type == 2:
+                            return 0.00375 if orig.piece_type - piece.piece_type > 0 else 0.06275
+                        elif piece.piece_type == 3:
+                            return 0.05 if orig.piece_type - piece.piece_type > 0 else 0.075
+                        elif piece.piece_type == 4:
+                            return 0.075 if orig.piece_type - piece.piece_type > 0 else 0.125
+                        elif piece.piece_type == 5:
+                            return 0.1125 if orig.piece_type - piece.piece_type > 0 else 0.225
+        return ans
+
+    def check_defense(self, coords, is_white, x_inc, y_inc):
+        """
+        :param coords: string, coordinates of starting square
+        :param is_white: boolean, whether we are looking for white or black pieces
+        :param x_inc: int, how much x index increases per iteration
+        :param y_inc: int, how much y index increases per iteration
+        :return: double: score of how valuable this piece it is attacking is
+        """
+        orig = self.game.piece_at(chess.parse_square(coords))
+        x = convert_s(coords[0])
+        y = convert_n(coords[1])
+        for i in range(8):
+            x += x_inc
+            y += y_inc
+            if x < 0 or x > 7 or y < 0 or y > 7:
+                return 0
+            square = revert(x, y)
+            piece = self.game.piece_at(chess.parse_square(square))
+            if piece is not None:
+                color = self.game.color_at(chess.parse_square(square))
+                if not color == is_white:
+                    if piece.piece_type == 1:
+                        return 0.00125 if orig.piece_type - piece.piece_type > 0 else 0.025
+                    elif piece.piece_type == 2:
+                        return 0.00375 if orig.piece_type - piece.piece_type > 0 else 0.06275
+                    elif piece.piece_type == 3:
+                        return 0.05 if orig.piece_type - piece.piece_type > 0 else 0.075
+                    elif piece.piece_type == 4:
+                        return 0.075 if orig.piece_type - piece.piece_type > 0 else 0.125
+                    elif piece.piece_type == 5:
+                        return 0.1125 if orig.piece_type - piece.piece_type > 0 else 0.225
+                else:
+                    return 0
+
+    def pawn_placement_score(self, coords, is_white, x_inc=1, y_inc=1):
+        orig = board.piece_at(chess.parse_square(coords))
+        x = convert_s(coords[0])
+        y = convert_n(coords[1])
+        ans = 0
+        for i in range(8):
+            x += x_inc
+            y += y_inc
+            if x < 0 or x > 7 or y < 0 or y > 7:
+                return ans
+            square = revert(x, y)
+            piece = self.game.piece_at(chess.parse_square(square))
+            if piece is not None:
+                color = self.game.color_at(chess.parse_square(square))
+                if color == is_white:
+                    if piece.piece_type == 1:
+                        ans -= -0.25
+                    elif piece.piece_type == 2:
+                        ans += 0.35
+                    elif piece.piece_type == 3:
+                        ans -= 0.35
+                    elif piece.piece_type == 4:
+                        ans -= 0.50
+                    elif piece.piece_type == 5:
+                        ans -= 0.85
+        return ans
+
 
 
 with psycopg.connect("dbname=test user=postgres") as conn:
