@@ -2,7 +2,7 @@
 
 ## Java + Python Versions
 
-### Java Featurs
+### Java Features
 
 #### Contents
 
