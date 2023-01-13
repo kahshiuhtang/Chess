@@ -4,8 +4,6 @@ import Game.ChessBoard;
 
 import java.awt.Image;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 

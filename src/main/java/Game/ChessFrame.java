@@ -9,7 +9,6 @@ import Pieces.*;
 
 public class ChessFrame extends javax.swing.JFrame implements ActionListener {
     private javax.swing.JButton bishopBUT;
-    private javax.swing.JPanel blackBoardPAN;
     private javax.swing.JPanel boardPAN;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
@@ -28,8 +27,10 @@ public class ChessFrame extends javax.swing.JFrame implements ActionListener {
         initComponents();
         initialize();
     }
-    
-    //Stes up chessboard, arrays of JButtons and colors + middle queening buttons
+
+    /**
+     * Sets up the chess game and the chess GUI
+     */
     public void initialize() {
         chess = new ChessBoard();
         turnStage = 0;
@@ -53,8 +54,9 @@ public class ChessFrame extends javax.swing.JFrame implements ActionListener {
         coloring();
         setPieces();
     }
-    
-    //Colors in the JButtons depending on board
+    /**
+     * Colors in the squares on the chessboard in GUI
+     */
     public void coloring() {
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
@@ -74,8 +76,9 @@ public class ChessFrame extends javax.swing.JFrame implements ActionListener {
             }
         }
     }
-    
-    //Sets each piece where it belongs depedning on chessboard class
+    /**
+     * Places down a piece whre it belongs at the start of a game
+     */
     public void setPieces() {
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
@@ -87,12 +90,12 @@ public class ChessFrame extends javax.swing.JFrame implements ActionListener {
             }
         }
     }
-    //Next is for queening
-    //Checks that each spot has a pawn there and allows you to put a promoted piece there
-    //I did not add restrictions so you can move with a pawn on the last rank
-    //Just loops through each "end zone" and checks for pawns to replace
-
-    private void bishopBUTActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bishopBUTActionPerformed
+    /**
+     * Turns a queening pawn into a bishop
+     *
+     * @param evt Event that has been triggered
+     */
+    private void bishopBUTActionPerformed(java.awt.event.ActionEvent evt) {
         // TODO add your handling code here:
         for(int i = 0; i < 8; i++){
             if(chess.getPiece(0,i) != null && chess.getPiece(0,i).toString().equals("Pawn")){
@@ -104,10 +107,13 @@ public class ChessFrame extends javax.swing.JFrame implements ActionListener {
                 setPieces();
             }
         }
-    }//GEN-LAST:event_bishopBUTActionPerformed
-
-    private void knightBUTActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_knightBUTActionPerformed
-        // TODO add your handling code here:
+    }
+    /**
+     * Turns a queening pawn into a knight
+     *
+     * @param evt Event that has been triggered
+     */
+    private void knightBUTActionPerformed(java.awt.event.ActionEvent evt) {
         for(int i = 0; i < 8; i++){
             if(chess.getPiece(0,i) != null && chess.getPiece(0,i).toString().equals("Pawn")){
                 chess.setPiece(0,i, new Knight(0,i,true));
@@ -118,10 +124,13 @@ public class ChessFrame extends javax.swing.JFrame implements ActionListener {
                 setPieces();
             }
         }
-    }//GEN-LAST:event_knightBUTActionPerformed
-
-    private void rookBUTActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rookBUTActionPerformed
-        // TODO add your handling code here:
+    }
+    /**
+     * Turns a queening pawn into a rook
+     *
+     * @param evt Event that has been triggered
+     */
+    private void rookBUTActionPerformed(java.awt.event.ActionEvent evt) {
         for(int i = 0; i < 8; i++){
             if(chess.getPiece(0,i) != null && chess.getPiece(0,i).toString().equals("Pawn")){
                 chess.setPiece(0,i, new Rook(0,i,true));
@@ -132,10 +141,13 @@ public class ChessFrame extends javax.swing.JFrame implements ActionListener {
                 setPieces();
             }
         }
-    }//GEN-LAST:event_rookBUTActionPerformed
-
-    private void queenBUTActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_queenBUTActionPerformed
-        // TODO add your handling code here:
+    }
+    /**
+     * Turns a queening pawn into a queen
+     *
+     * @param evt Event that has been triggered
+     */
+    private void queenBUTActionPerformed(java.awt.event.ActionEvent evt) {
         for(int i = 0; i < 8; i++){
             if(chess.getPiece(0,i) != null && chess.getPiece(0,i).toString().equals("Pawn")){
                 chess.setPiece(0,i, new Queen(0,i,true));
@@ -146,42 +158,18 @@ public class ChessFrame extends javax.swing.JFrame implements ActionListener {
                 setPieces();
             }
         }
-    }//GEN-LAST:event_queenBUTActionPerformed
+    }
 
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(ChessFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(ChessFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(ChessFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(ChessFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-
-        /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 new ChessFrame().setVisible(true);
             }
         });
     }
-
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-
+    /**
+     * Initializes all the components on the GUI screen
+     */
     private void initComponents() {
         boardPAN = new javax.swing.JPanel();
         promotionPAN = new javax.swing.JPanel();
@@ -208,7 +196,6 @@ public class ChessFrame extends javax.swing.JFrame implements ActionListener {
 
         getContentPane().add(boardPAN);
         boardPAN.setBounds(20, 80, 800, 800);
-        //promotionPAN.setLayout(new AbsoluteLayout());
         queenBUT.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 queenBUTActionPerformed(evt);
@@ -247,15 +234,19 @@ public class ChessFrame extends javax.swing.JFrame implements ActionListener {
 
         pack();
     }
-    @Override
-    //What to do when a button is pressed
+    /**
+     * Activated when there has been any action on the board
+     * Will tell handler how to manage event
+     * Either piece is selected to move or square where piece should end up has selected
+     * @param ae Event that has occurred and triggered this function
+     */
     public void actionPerformed(ActionEvent ae) {
         //Finds source of button press
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
                 if (ae.getSource() == squares[i][j]) {
                     switch (turnStage) {
-                        case 0:
+                        case 0: //White side has decided which piece ot move
                             if (chess.getSquare(i, j).getPiece() != null && chess.getPiece(i, j).getIsWhite() && !chess.checkGameEnd(true)) {
                                 squares[i][j].setBackground(Color.RED);
                                 prevX = i;
@@ -263,7 +254,7 @@ public class ChessFrame extends javax.swing.JFrame implements ActionListener {
                                 turnStage++;
                             }
                             break;
-                        case 1:
+                        case 1: //White side has decided where to move its piece
                             coloring();
                             newX = i;
                             newY = j;
@@ -293,7 +284,7 @@ public class ChessFrame extends javax.swing.JFrame implements ActionListener {
                             prevX = prevY = newX = newY = 10;
                             setPieces();
                             break;
-                        case 2:
+                        case 2: //Black piece has selected a piece
                             if (chess.getSquare(i, j).getPiece() != null && !chess.getPiece(i, j).getIsWhite() && !chess.checkGameEnd(true)) {
                                 squares[i][j].setBackground(Color.RED);
                                 prevX = i;
@@ -301,7 +292,7 @@ public class ChessFrame extends javax.swing.JFrame implements ActionListener {
                                 turnStage++;
                             }
                             break;
-                        case 3:
+                        case 3: //Black side has decided where to move its piece
                             coloring();
                             newX = i;
                             newY = j;
